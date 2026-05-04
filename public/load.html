@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b0f14">
+    <title>Tinf0il | Launch</title>
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <script src="/assets/js/settings.js" defer></script>
+    <script src="/assets/js/proxy-scramjet.js" defer></script>
+    <script src="/data/3kh0-games.js" defer></script>
+    <script src="/data/merge-custom-games.js" defer></script>
+    <script src="/data/apps.js" defer></script>
+    <script src="/assets/js/app.js" defer></script>
+  </head>
+  <body class="load-browser">
+    <header class="browser-chrome">
+      <div class="browser-chrome-row">
+        <a class="browser-brand" href="/index.html#/home" title="Home">
+          <img src="/foil.png" alt="">
+        </a>
+        <nav class="browser-nav-tabs" aria-label="Site">
+          <a href="/index.html#/home" data-spa-page="home">Home</a>
+          <a href="/index.html#/proxy" data-spa-page="proxy">Proxy</a>
+          <a href="/index.html#/games" data-spa-page="games">Games</a>
+          <a href="/index.html#/apps" data-spa-page="apps">Apps</a>
+          <a href="/index.html#/settings" data-spa-page="settings">Settings</a>
+          <a href="/index.html#/about" data-spa-page="about">About</a>
+        </nav>
+        <form class="browser-omnibox" data-browser-nav>
+          <input
+            type="text"
+            data-browser-url
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Search or enter address"
+            aria-label="Address"
+          >
+          <button class="browser-go" type="submit">Go</button>
+        </form>
+        <div class="browser-toolbar">
+          <button type="button" class="browser-icon-btn" onclick="history.back()" title="Back">←</button>
+          <button type="button" class="browser-icon-btn" data-open-blank title="Pop out new window">⛶</button>
+        </div>
+      </div>
+      <p class="browser-status" data-status role="status" aria-live="polite"></p>
+    </header>
+
+    <main class="browser-main-grid" id="browser-main-grid">
+      <div class="browser-frame-wrap">
+        <iframe id="launch-frame" title="Tinf0il browser view"></iframe>
+      </div>
+      <aside class="load-side load-side--launch" id="launch-sidebar" hidden>
+        <div class="load-side-top">
+          <button
+            type="button"
+            class="load-side-collapse"
+            data-sidebar-collapse
+            aria-expanded="true"
+            title="Minimize sidebar"
+          >⟨</button>
+        </div>
+        <div class="load-side-body">
+          <img id="launch-image" src="/addicon.png" alt="">
+          <h1 id="launch-title">Loading</h1>
+          <p id="launch-description">Getting the session ready.</p>
+          <div class="load-side-actions">
+            <button class="button secondary" type="button" onclick="history.back()">Back</button>
+            <button class="button secondary" type="button" data-open-blank>Pop out</button>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="load-side-expand"
+          data-sidebar-expand
+          hidden
+          title="Show launch info"
+          aria-label="Expand sidebar"
+        >⟩</button>
+      </aside>
+    </main>
+  </body>
+</html>

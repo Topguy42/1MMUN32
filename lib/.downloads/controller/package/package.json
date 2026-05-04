@@ -1,0 +1,14 @@
+{
+  "name": "@mercuryworkshop/scramjet-controller",
+  "version": "0.0.9",
+  "type": "module",
+  "main": "index.ts",
+  "types": "./dist/types/index.d.ts",
+  "dependencies": {
+    "@mercuryworkshop/proxy-transports": "1.0.2",
+    "@mercuryworkshop/scramjet": "2.0.2-alpha"
+  },
+  "devDependencies": {
+    "@mercuryworkshop/rpc": "0.0.1"
+  }
+}
