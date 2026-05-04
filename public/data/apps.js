@@ -21,13 +21,13 @@ var apps = [
       "id": "geforce",
       "title": "GeForce NOW",
       "url": "https://play.geforcenow.com",
-      'image': 'https://raw.githubusercontent.com/proudparrot2/cdn/main/8z9zeDIT_400x400-removebg-preview.png'
+      'image': 'https://www.google.com/s2/favicons?domain=geforcenow.com&sz=128'
     },
     {
       'id': 'vscode',
       'title': 'Visual Studio Code',
       'url': 'https://vscode.dev/',
-      'image': 'https://images-eds-ssl.xboxlive.com/image?url=Q_rwcVSTCIytJ0KOzcjWTYtI_MIrVq4WfN7M.qN7gV3ayNiQeJK6Uxg366DH3bnRmVWMFBWWyXonVyp6x0RYE1elb_jkQQQH7FwsNBBqQO4iFrOIwXtaGkMjmrISfBfgMsCEGwIBPArmzCSVWYx1zA--&format=source'
+      'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Visual_Studio_Code_1.35_icon.svg/1024px-Visual_Studio_Code_1.35_icon.svg.png'
     },
     {
       "id": "tiktok",
@@ -45,7 +45,7 @@ var apps = [
       "id": "reddit",
       "title": "Reddit",
       "url": "https://reddit.com",
-      'image': 'https://www.redditinc.com/assets/images/site/reddit-logo.png'
+      'image': 'https://www.redditstatic.com/shreddit/assets/favicon/192x192.png'
     },
     {
       "id": "youtube",
@@ -57,7 +57,7 @@ var apps = [
       "id": "twitter",
       "title": "Twitter",
       "url": "https://twitter.com",
-      'image': 'https://seeklogo.com/images/T/twitter-icon-square-logo-108D17D373-seeklogo.com.png'
+      'image': 'https://abs.twimg.com/icons/apple-touch-icon-192x192.png'
     },
     {
       'id': 'spotify',
@@ -73,9 +73,9 @@ var apps = [
     },
     {
       'id': 'movieweb',
-      'title': 'movie-web',
-      'url': 'https://movie-web.app/search/movie',
-      'image': 'https://docs.google.com/drawings/d/e/2PACX-1vSkig-KYmo2_05aFXQFMgnfVqL5SLi-CJu-BeK-pLZpyU73LNduuKE4N5uW4QcyjQbFGiZR3lA7BfsB/pub?w=960&h=720'
+      'title': '1Shows',
+      'url': 'https://www.1shows.org/',
+      'image': 'https://www.google.com/s2/favicons?domain=1shows.org&sz=128'
     },
     {
       'id': 'coolmathgames',
@@ -87,7 +87,7 @@ var apps = [
       'id': 'win11',
       'title': 'Windows 11 in React',
       'url': 'https://win11.blueedge.me/',
-      "image": "https://cdn.upload.systems/uploads/lnysPmIS.png",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Windows_11_Logo.svg/800px-Windows_11_Logo.svg.png",
       "description": "A remake of the Windows 11 UI in React.js"
     },
     {

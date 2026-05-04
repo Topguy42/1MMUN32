@@ -127,12 +127,44 @@
 
 	window.Tinf0il = window.Tinf0il || {};
 	window.Tinf0il.normalizeUrl = normalizeUrl;
-	window.Tinf0il.openBlank = function () {
-		window.open("about:blank", "_blank");
+	window.Tinf0il.openBlank = function (url) {
+		url = url || location.href;
+		const tab = window.open("about:blank", "_blank");
+		if (!tab) return;
+		tab.document.title = document.title || "Tinf0il";
+		const iframe = tab.document.createElement("iframe");
+		Object.assign(iframe.style, {
+			border: "0",
+			inset: "0",
+			width: "100vw",
+			height: "100vh",
+			position: "fixed",
+		});
+		iframe.src = url;
+		tab.document.body.style.margin = "0";
+		tab.document.body.appendChild(iframe);
 	};
 	window.Tinf0il.resetProxy = function () {
 		window.Tinf0ilProxy.reset();
 	};
+
+	(function initPanicKey() {
+		let lastPress = 0;
+		document.addEventListener("keydown", (e) => {
+			const key = localStorage.getItem("tinf0ilPanicKey") || "Escape";
+			if (e.key !== key) return;
+			const now = Date.now();
+			if (now - lastPress < 500) {
+				e.preventDefault();
+				const raw = localStorage.getItem("tinf0ilPanicUrl") ||
+					localStorage.getItem("websiteCloakHost") ||
+					"classroom.google.com";
+				const href = /^https?:\/\//i.test(raw) ? raw : "https://" + raw;
+				location.replace(href);
+			}
+			lastPress = now;
+		}, true);
+	})();
 
 	document.addEventListener("DOMContentLoaded", () => {
 		getController().catch((err) => {

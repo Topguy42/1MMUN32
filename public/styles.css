@@ -173,7 +173,10 @@ main {
   font-size: 12px;
   color: var(--muted);
   font-family: 'JetBrains Mono', monospace;
+  text-decoration: none;
+  transition: color 0.15s;
 }
+.status-chip:hover { color: var(--text); }
 
 .status-dot {
   width: 6px;
@@ -722,6 +725,47 @@ main {
 
 .modal-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
+.add-own-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.add-own-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--muted);
+  text-transform: lowercase;
+}
+
+.add-own-fields label em {
+  font-style: normal;
+  opacity: 0.5;
+}
+
+.add-own-input {
+  background: var(--surface, #111);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  padding: 8px 10px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.add-own-input:focus { border-color: var(--accent, #7fff7f); }
+
+.add-own-err {
+  font-size: 12px;
+  color: #ff6b6b;
+  margin: 0;
+}
+
 /* ── settings ── */
 .settings-wrap {
   display: grid;
@@ -943,6 +987,18 @@ main {
 
 .tg-switch.on { background: var(--accent-dim); border-color: var(--accent); }
 .tg-switch.on::after { left: 18px; background: var(--accent); }
+
+.panic-key-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  min-width: 120px;
+  text-align: center;
+}
+.panic-key-btn.listening {
+  border-color: var(--accent);
+  color: var(--accent);
+  animation: breathe 1s ease-in-out infinite;
+}
 
 /* ── about ── */
 .about-grid {

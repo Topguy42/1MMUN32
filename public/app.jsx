@@ -249,10 +249,9 @@ const TopBar = ({ page, navigate }) => {
             <button key={p} type="button" className={cx(page === p && 'active')} onClick={() => navigate(p)}>{p}</button>
           ))}
         </nav>
-        <div className="status-chip">
-          <span className="status-dot" />
-          online
-        </div>
+        <a className="status-chip" href="https://discord.gg/rYWBs6Hezs" target="_blank" rel="noopener noreferrer">
+          get more links ↗
+        </a>
       </div>
     </header>
   );
@@ -417,15 +416,43 @@ const CatalogThumb = ({ id, title, image }) => {
 const Catalog = ({ kind, items, tags, setActiveItem }) => {
   const [search, setSearch] = useState('');
   const [tag, setTag] = useState('all');
+  const [showAddOwn, setShowAddOwn] = useState(false);
+
+  const storageKey = kind === 'games' ? 'customgames' : 'customapps';
+  const defaultTag  = kind === 'games' ? 'arcade' : 'tools';
+
+  const [customItems, setCustomItems] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      return Array.isArray(saved) ? saved.filter(it => it.id && it.title && it.url) : [];
+    } catch { return []; }
+  });
+
+  const allItems = useMemo(() => [...customItems, ...items], [customItems, items]);
 
   const filtered = useMemo(() =>
-    items.filter(it => {
+    allItems.filter(it => {
       if (tag !== 'all' && it.tag !== tag) return false;
       if (search && !it.title.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     }),
-    [items, search, tag]
+    [allItems, search, tag]
   );
+
+  const handleSave = ({ title, url, image }) => {
+    const newItem = {
+      id: 'custom-' + Date.now(),
+      title,
+      url,
+      image: image || '',
+      tag: defaultTag,
+      custom: true,
+    };
+    const updated = [newItem, ...customItems];
+    setCustomItems(updated);
+    try { localStorage.setItem(storageKey, JSON.stringify(updated)); } catch {}
+    setShowAddOwn(false);
+  };
 
   return (
     <main>
@@ -441,7 +468,7 @@ const Catalog = ({ kind, items, tags, setActiveItem }) => {
       <section className="shell">
         <div className="toolbar">
           <div className="toolbar-left">
-            <span className="toolbar-count">{filtered.length} / {items.length}</span>
+            <span className="toolbar-count">{filtered.length} / {allItems.length}</span>
             <div className="chip-row">
               {tags.map(t => (
                 <button key={t} className={cx('chip', tag === t && 'active')} onClick={() => setTag(t)}>{t}</button>
@@ -458,8 +485,9 @@ const Catalog = ({ kind, items, tags, setActiveItem }) => {
           </div>
         </div>
 
+        {showAddOwn && <AddOwnModal kind={kind} onSave={handleSave} onClose={() => setShowAddOwn(false)} />}
         <div className="catalog-grid">
-          <button className="catalog-card add-card">
+          <button className="catalog-card add-card" onClick={() => setShowAddOwn(true)}>
             <div className="thumb" />
             <div className="meta">
               <span className="name">add your own</span>
@@ -467,8 +495,12 @@ const Catalog = ({ kind, items, tags, setActiveItem }) => {
           </button>
           {filtered.map((it, i) => (
             <button key={it.id} className="catalog-card" onClick={() => {
-              const param = kind === 'games' ? 'game' : 'app';
-              window.location.href = `/load.html?${param}=${encodeURIComponent(it.id)}`;
+              if (it.custom) {
+                window.location.href = `/load.html?url=${encodeURIComponent(it.url)}`;
+              } else {
+                const param = kind === 'games' ? 'game' : 'app';
+                window.location.href = `/load.html?${param}=${encodeURIComponent(it.id)}`;
+              }
             }}>
               <div className="thumb">
                 <CatalogThumb id={it.id} title={it.title} image={it.image} />
@@ -482,6 +514,70 @@ const Catalog = ({ kind, items, tags, setActiveItem }) => {
         </div>
       </section>
     </main>
+  );
+};
+
+const AddOwnModal = ({ kind, onSave, onClose }) => {
+  const [title, setTitle] = useState('');
+  const [link, setLink] = useState('');
+  const [image, setImage] = useState('');
+  const [err, setErr] = useState('');
+
+  const handleSave = () => {
+    const trimmed = link.trim();
+    if (!title.trim()) { setErr('title is required.'); return; }
+    if (!trimmed) { setErr('link is required.'); return; }
+    let href = trimmed;
+    if (!/^https?:\/\//i.test(href)) href = 'https://' + href;
+    try { new URL(href); } catch { setErr('enter a valid URL.'); return; }
+    onSave({ title: title.trim(), url: href, image: image.trim() });
+  };
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-meta">
+            <div className="kind">custom {kind === 'games' ? 'game' : 'app'}</div>
+            <h3>add your own</h3>
+          </div>
+        </div>
+        <div className="add-own-fields">
+          <label>
+            <span>title</span>
+            <input
+              className="add-own-input"
+              placeholder="My Site"
+              value={title}
+              onChange={e => { setTitle(e.target.value); setErr(''); }}
+            />
+          </label>
+          <label>
+            <span>link</span>
+            <input
+              className="add-own-input"
+              placeholder="https://example.com"
+              value={link}
+              onChange={e => { setLink(e.target.value); setErr(''); }}
+            />
+          </label>
+          <label>
+            <span>image <em>(optional)</em></span>
+            <input
+              className="add-own-input"
+              placeholder="https://example.com/icon.png"
+              value={image}
+              onChange={e => setImage(e.target.value)}
+            />
+          </label>
+          {err && <p className="add-own-err">{err}</p>}
+        </div>
+        <div className="modal-actions">
+          <button className="btn accent" onClick={handleSave}>add</button>
+          <button className="btn" onClick={onClose}>cancel</button>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -590,6 +686,16 @@ const Settings = ({ theme, setTheme }) => {
   const [stealth, setStealth] = useState(true);
   const [reduce, setReduce] = useState(false);
   const [bigText, setBigText] = useState(false);
+
+  const [panicKey, setPanicKey] = useState(() => localStorage.getItem('tinf0ilPanicKey') || 'Escape');
+  const [panicUrl, setPanicUrl] = useState(() => localStorage.getItem('tinf0ilPanicUrl') || '');
+  const [listeningForKey, setListeningForKey] = useState(false);
+
+  const savePanic = (key, url) => {
+    localStorage.setItem('tinf0ilPanicKey', key);
+    if (url.trim()) localStorage.setItem('tinf0ilPanicUrl', url.trim());
+    else localStorage.removeItem('tinf0ilPanicUrl');
+  };
 
   const themes = [
     { id: 'midnight', name: 'midnight', pal: ['#07090d', '#69b4cc', '#334'] },
@@ -704,7 +810,7 @@ const Settings = ({ theme, setTheme }) => {
                 setCloakAddressHost(classroom.host);
                 setImportUrl('');
                 setImportErr('');
-                document.title = 'tinf0il · the foil';
+                document.title = 'tinf0il · home';
                 const fav = document.querySelector("link[rel='icon']");
                 if (fav) fav.href = '/assets/foil.png';
               }}>reset</button>
@@ -739,6 +845,38 @@ const Settings = ({ theme, setTheme }) => {
                 <button className={cx('tg-switch', val && 'on')} onClick={() => set(!val)} aria-pressed={val} />
               </div>
             ))}
+          </div>
+
+          <div className="panel">
+            <span className="panel-tag">// escape</span>
+            <h3>panic key</h3>
+            <p className="h-sub">double-tap to instantly ditch the page.</p>
+            <div className="field">
+              <span className="field-label">trigger key</span>
+              <button
+                className={cx('btn', 'panic-key-btn', listeningForKey && 'listening')}
+                onKeyDown={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const k = e.key === ' ' ? 'Space' : e.key;
+                  setPanicKey(k);
+                  savePanic(k, panicUrl);
+                  setListeningForKey(false);
+                }}
+                onClick={() => setListeningForKey(true)}
+                onBlur={() => setListeningForKey(false)}
+              >
+                {listeningForKey ? 'press any key…' : panicKey}
+              </button>
+            </div>
+            <div className="field">
+              <span className="field-label">decoy url <em style={{opacity:0.5}}>(default: your cloak host)</em></span>
+              <input
+                value={panicUrl}
+                onChange={e => { setPanicUrl(e.target.value); savePanic(panicKey, e.target.value); }}
+                placeholder="classroom.google.com"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -890,7 +1028,7 @@ const SPLASHES = [
 const VOICE_PRESETS = {
   punchy: {
     headline: null,
-    lede: 'paste a link, cook a search. tinf0il routes it, you get there.',
+    lede: 'paste a link and go. tinf0il routes it, you get there.',
   },
   chill: {
     headline: <>browse privately. <em>that's it.</em></>,
@@ -936,7 +1074,7 @@ const App = () => {
   useEffect(() => { setTheme(tweaks.theme); }, [tweaks.theme]);
   useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
   useEffect(() => {
-    const titles = { home: 'tinf0il · the foil', games: 'tinf0il · games', apps: 'tinf0il · apps', chatroom: 'tinf0il · chatroom', settings: 'tinf0il · settings', about: 'tinf0il · about' };
+    const titles = { home: 'tinf0il · home', games: 'tinf0il · games', apps: 'tinf0il · apps', chatroom: 'tinf0il · chatroom', settings: 'tinf0il · settings', about: 'tinf0il · about' };
     document.title = titles[page] || 'tinf0il';
   }, [page]);
 
