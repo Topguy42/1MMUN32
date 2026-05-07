@@ -609,19 +609,50 @@ const LaunchModal = ({ item, onClose }) => {
   );
 };
 
-const Tinf0ilTV = () => (
-  <main className="tv-page tv-embed-page">
-    <section className="tv-app-frame-wrap" aria-label="tinf0il TV">
-      <iframe
-        className="tv-app-frame"
-        title="tinf0il TV"
-        src="/tv/"
-        allow="autoplay; fullscreen; picture-in-picture"
-        referrerPolicy="no-referrer"
-      />
-    </section>
-  </main>
-);
+const Tinf0ilTV = () => {
+  const [status, setStatus] = useState('loading');
+
+  return (
+    <main className="tv-page tv-embed-page">
+      {status === 'loading' && (
+        <div className="tv-loading">
+          <div className="tv-loading-inner">
+            <img src="/assets/foil.png" alt="" className="tv-loading-logo" />
+            <span className="tv-loading-label">tinf<em>0</em>il TV</span>
+            <div className="tv-loading-bar"><div className="tv-loading-fill" /></div>
+          </div>
+        </div>
+      )}
+      {status === 'error' && (
+        <div className="tv-loading">
+          <div className="tv-loading-inner">
+            <img src="/assets/foil.png" alt="" className="tv-loading-logo" />
+            <span className="tv-loading-label">tinf<em>0</em>il TV</span>
+            <p className="tv-err">TV app isn't running — start the server then refresh.</p>
+          </div>
+        </div>
+      )}
+      <section className="tv-app-frame-wrap" aria-label="tinf0il TV" style={{ visibility: status === 'ready' ? 'visible' : 'hidden' }}>
+        <iframe
+          className="tv-app-frame"
+          title="tinf0il TV"
+          src="/tv/"
+          allow="autoplay; fullscreen; picture-in-picture"
+          referrerPolicy="no-referrer"
+          onLoad={e => {
+            try {
+              const ok = e.target.contentDocument !== null || e.target.contentWindow !== null;
+              setStatus(ok ? 'ready' : 'error');
+            } catch {
+              setStatus('ready');
+            }
+          }}
+          onError={() => setStatus('error')}
+        />
+      </section>
+    </main>
+  );
+};
 
 const Settings = ({ theme, setTheme }) => {
   const initial = useMemo(() => readInitialCloak(), []);

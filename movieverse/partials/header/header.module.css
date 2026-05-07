@@ -1,0 +1,94 @@
+.container {
+  display: flex;
+  position: fixed;
+  justify-content: center;
+  align-items: center;
+  height: 6rem;
+  width: 100%;
+  z-index: 999;
+  background: linear-gradient(#0c0c0fee, #0c0c0f99, #0c0c0f00);
+  backdrop-filter: blur(0px);
+}
+
+.wrapper {
+  width: 100%;
+  max-width: 93rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+  position: relative;
+}
+
+.left {
+  display: flex;
+}
+.right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* tinf0il brand */
+.brand {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brandLogo {
+  opacity: 0.92;
+  transition: transform 0.2s ease;
+}
+.brand:hover .brandLogo {
+  transform: scale(1.08);
+}
+
+.brandName {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #d4d4dc;
+  letter-spacing: -0.01em;
+}
+
+.brandName em {
+  color: #7eb8a4;
+  font-style: normal;
+}
+
+.brandSub {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: #5c5c6e;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-left: 2px;
+}
+
+@media screen and (max-width: 1510px) {
+  .container {
+    padding-inline: 10px;
+  }
+}
+
+@media screen and (max-width: 620px) {
+  .right {
+    gap: 14px;
+  }
+}
+
+.animate_ltr {
+  animation: ltr 0.5s ease-in-out forwards;
+  left: -106%;
+}
+
+@keyframes ltr {
+  from {
+    left: -106%;
+  }
+  to {
+    left: 0%;
+  }
+}

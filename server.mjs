@@ -17,10 +17,9 @@ const TV_APP_FETCH_MS = 30_000;
 const TV_APP_ORIGIN = process.env.TV_APP_ORIGIN || process.env.TV_NEXT_ORIGIN || "http://127.0.0.1:8791";
 const TV_APP_AUTOSTART = process.env.TV_APP_AUTOSTART !== "0" && process.env.TV_NEXT_AUTOSTART !== "0";
 const TV_APP_URL = new URL(TV_APP_ORIGIN);
-const TV_APP_PORT = Number(process.env.TV_APP_PORT || process.env.TV_NEXT_PORT || TV_APP_URL.port || 8791);
+const TV_APP_PORT = Number(process.env.TV_APP_PORT || process.env.TV_NEXT_PORT || TV_APP_URL.port || 3000);
 const repoRoot = path.dirname(fileURLToPath(import.meta.url));
-const TV_APP_DIR = path.join(repoRoot, "movie-web");
-const TV_APP_DIST = path.join(TV_APP_DIR, "dist");
+const TV_APP_DIR = path.join(repoRoot, "movieverse");
 const TV_PROXY_HEADER_MAP = {
 	"x-cookie": "cookie",
 	"x-referer": "referer",
@@ -261,12 +260,12 @@ function applyTvProxyCors(res) {
 }
 
 const app = express();
-const tvAppStatic = express.static(TV_APP_DIST, { fallthrough: true });
 
 let tvAppChild = null;
 
-function hasTvAppBuild() {
-	return fs.existsSync(path.join(TV_APP_DIST, "index.html"));
+function hasTvAppInstalled() {
+	return fs.existsSync(path.join(TV_APP_DIR, "package.json")) &&
+		fs.existsSync(path.join(TV_APP_DIR, "node_modules", "next", "dist", "bin", "next"));
 }
 
 async function isTvAppReachable() {
@@ -288,18 +287,22 @@ async function isTvAppReachable() {
 
 async function ensureTvAppServer() {
 	if (!TV_APP_AUTOSTART || !["localhost", "127.0.0.1"].includes(TV_APP_URL.hostname)) return;
-	if (!fs.existsSync(path.join(TV_APP_DIR, "package.json"))) return;
-	if (await isTvAppReachable()) return;
-
-	const viteBin = path.join(TV_APP_DIR, "node_modules", "vite", "bin", "vite.js");
-	if (!fs.existsSync(viteBin)) {
-		console.warn("tinf0il TV dependencies are missing. Run npm install --ignore-scripts in movie-web to enable /tv/.");
+	if (!hasTvAppInstalled()) {
+		console.warn("tinf0il TV: run `npm install` inside movieverse/ to enable /tv/.");
 		return;
 	}
+	if (await isTvAppReachable()) return;
 
-	const out = fs.openSync(path.join(TV_APP_DIR, "movie-web-vite.out.log"), "a");
-	const err = fs.openSync(path.join(TV_APP_DIR, "movie-web-vite.err.log"), "a");
-	tvAppChild = spawn(process.execPath, [viteBin, "--host", "127.0.0.1", "--port", String(TV_APP_PORT)], {
+	const nextCli = path.join(TV_APP_DIR, "node_modules", "next", "dist", "bin", "next");
+	const hasBuild = fs.existsSync(path.join(TV_APP_DIR, ".next", "BUILD_ID"));
+	const nextArgs = hasBuild
+		? ["start", "--hostname", "127.0.0.1", "--port", String(TV_APP_PORT)]
+		: ["dev", "--turbo", "--hostname", "127.0.0.1", "--port", String(TV_APP_PORT)];
+
+	const out = fs.openSync(path.join(TV_APP_DIR, "movieverse.out.log"), "a");
+	const err = fs.openSync(path.join(TV_APP_DIR, "movieverse.err.log"), "a");
+
+	tvAppChild = spawn(process.execPath, [nextCli, ...nextArgs], {
 		cwd: TV_APP_DIR,
 		env: { ...process.env, PORT: String(TV_APP_PORT) },
 		stdio: ["ignore", out, err],
@@ -311,7 +314,7 @@ async function ensureTvAppServer() {
 		}
 		tvAppChild = null;
 	});
-	console.log(`tinf0il TV Vite: ${TV_APP_ORIGIN}/tv/`);
+	console.log(`tinf0il TV (Next.js ${hasBuild ? "prod" : "dev"}): ${TV_APP_ORIGIN}/tv/`);
 }
 
 function stopTvAppServer() {
@@ -408,23 +411,9 @@ app.all("/api/tv-proxy", async (req, res) => {
 	}
 });
 
-app.use("/tv", (req, res, next) => {
-	if (!hasTvAppBuild()) {
-		next();
-		return;
-	}
-	tvAppStatic(req, res, next);
+app.all(/^\/tv(\/.*)?$/, (req, res, next) => {
+	proxyTvAppRequest(req, res).catch(next);
 });
-
-app.get(/^\/tv(?:\/.*)?$/, (req, res, next) => {
-	if (!hasTvAppBuild()) {
-		proxyTvAppRequest(req, res).catch(next);
-		return;
-	}
-	res.sendFile(path.join(TV_APP_DIST, "index.html"));
-});
-
-app.use("/tv", proxyTvAppRequest);
 
 app.get("/api/tab-meta", async (req, res) => {
 	const raw = req.query.url;
@@ -493,7 +482,7 @@ const { routeRequest, routeUpgrade } = await bootstrap({
 	transport: "libcurl",
 });
 
-if (!hasTvAppBuild()) await ensureTvAppServer();
+await ensureTvAppServer();
 
 const server = http.createServer((req, res) => {
 	if (routeRequest(req, res)) return;
