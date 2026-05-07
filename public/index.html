@@ -12,7 +12,23 @@
   </script>
   <script src="/assets/js/settings.js"></script>
   <script src="/assets/js/proxy-scramjet.js" defer></script>
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<!-- Firebase compat SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    firebase.initializeApp({
+      apiKey: "AIzaSyB6_jbjIoS1Vu4Er3FadpMmEnFXEcD9yuo",
+      authDomain: "tinf0il-b75b1.firebaseapp.com",
+      projectId: "tinf0il-b75b1",
+      storageBucket: "tinf0il-b75b1.firebasestorage.app",
+      messagingSenderId: "12175261060",
+      appId: "1:12175261060:web:1ff4e080311327382971d1"
+    });
+    window.fbAuth = firebase.auth();
+    window.fbDb   = firebase.firestore();
+  </script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 </head>
@@ -24,7 +40,7 @@
   <script type="text/babel" src="/tweaks-panel.jsx"></script>
   <script type="text/babel" src="/app.jsx"></script>
   <script>
-    /* Wait until React has rendered (Babel transpiles async), then inject canvas
+    /* Wait until React has rendered (Babel transpiles async), then inject canvas1
        as first child of #root so it sits above the CSS background pseudo-elements. */
     (function () {
       function startParticles(root) {
@@ -51,22 +67,24 @@
 
         function frame() {
           ctx.clearRect(0, 0, W, H);
-          for (let i = 0; i < pts.length; i++) {
-            const p = pts[i];
-            p.x += p.vx; p.y += p.vy;
-            if (p.x < 0 || p.x > W) p.vx *= -1;
-            if (p.y < 0 || p.y > H) p.vy *= -1;
-            for (let j = i + 1; j < pts.length; j++) {
-              const q = pts[j];
-              const d = Math.hypot(p.x - q.x, p.y - q.y);
-              if (d < 105) {
-                ctx.strokeStyle = `rgba(255,255,255,${0.045 * (1 - d / 105)})`;
-                ctx.lineWidth = 0.5;
-                ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+          if (!document.documentElement.hasAttribute('data-reduce-motion')) {
+            for (let i = 0; i < pts.length; i++) {
+              const p = pts[i];
+              p.x += p.vx; p.y += p.vy;
+              if (p.x < 0 || p.x > W) p.vx *= -1;
+              if (p.y < 0 || p.y > H) p.vy *= -1;
+              for (let j = i + 1; j < pts.length; j++) {
+                const q = pts[j];
+                const d = Math.hypot(p.x - q.x, p.y - q.y);
+                if (d < 105) {
+                  ctx.strokeStyle = `rgba(255,255,255,${0.045 * (1 - d / 105)})`;
+                  ctx.lineWidth = 0.5;
+                  ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+                }
               }
+              ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+              ctx.fillStyle = `rgba(255,255,255,${p.a})`; ctx.fill();
             }
-            ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255,255,255,${p.a})`; ctx.fill();
           }
           requestAnimationFrame(frame);
         }

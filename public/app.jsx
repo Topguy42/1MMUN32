@@ -1,5 +1,52 @@
 const { useState, useEffect, useRef, useMemo } = React;
 
+const CustomCursor = ({ cursorStyle = 'dot' }) => {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const html = document.documentElement;
+    if (cursorStyle === 'off') {
+      html.classList.remove('custom-cursor-active');
+    } else {
+      html.classList.add('custom-cursor-active');
+    }
+    return () => html.classList.remove('custom-cursor-active');
+  }, [cursorStyle]);
+
+  useEffect(() => {
+    if (cursorStyle === 'off') return;
+    const el = ref.current;
+    if (!el) return;
+    const onMove = e => {
+      el.style.left = e.clientX + 'px';
+      el.style.top  = e.clientY + 'px';
+    };
+    const onDown = () => el.classList.add('clicking');
+    const onUp   = () => el.classList.remove('clicking');
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mousedown', onDown);
+    window.addEventListener('mouseup',   onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mousedown', onDown);
+      window.removeEventListener('mouseup',   onUp);
+    };
+  }, [cursorStyle]);
+
+  if (cursorStyle === 'off') return null;
+
+  return (
+    <div ref={ref} className={`custom-cursor style-${cursorStyle}`}>
+      {cursorStyle === 'cross' && (
+        <>
+          <span className="cross-arm h" />
+          <span className="cross-arm v" />
+        </>
+      )}
+    </div>
+  );
+};
+
 const cx = (...xs) => xs.filter(Boolean).join(' ');
 
 const CLOAK_PRESETS = [
@@ -227,8 +274,82 @@ const FloatingLogo = () => {
   );
 };
 
+const AuthModal = ({ onClose }) => {
+  const [mode, setMode] = useState('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const clearErr = () => setErr('');
+
+  const fmtErr = (e) =>
+    (e.message || 'something went wrong')
+      .replace('Firebase: ', '')
+      .replace(/ \(auth\/[^)]+\)\.?$/, '');
+
+  const submit = async (ev) => {
+    ev.preventDefault();
+    setBusy(true); setErr('');
+    try {
+      if (mode === 'login') {
+        await window.fbAuth.signInWithEmailAndPassword(email, password);
+      } else {
+        const cred = await window.fbAuth.createUserWithEmailAndPassword(email, password);
+        if (displayName.trim()) await cred.user.updateProfile({ displayName: displayName.trim() });
+      }
+      onClose();
+    } catch (e) { setErr(fmtErr(e)); }
+    finally { setBusy(false); }
+  };
+
+  const googleSignIn = async () => {
+    setBusy(true); setErr('');
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await window.fbAuth.signInWithPopup(provider);
+      onClose();
+    } catch (e) { setErr(fmtErr(e)); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal auth-modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-meta">
+            <div className="kind">tinf0il</div>
+            <h3>{mode === 'login' ? 'sign in' : 'create account'}</h3>
+          </div>
+        </div>
+        <form className="auth-fields" onSubmit={submit}>
+          {mode === 'signup' && (
+            <input className="auth-input" placeholder="display name (optional)" value={displayName} onChange={e => { setDisplayName(e.target.value); clearErr(); }} />
+          )}
+          <input className="auth-input" type="email" placeholder="email" value={email} onChange={e => { setEmail(e.target.value); clearErr(); }} required />
+          <input className="auth-input" type="password" placeholder="password" value={password} onChange={e => { setPassword(e.target.value); clearErr(); }} required minLength={6} />
+          {err && <p className="auth-err">{err}</p>}
+          <button className="btn accent" type="submit" disabled={busy}>{busy ? '...' : mode === 'login' ? 'sign in' : 'sign up'}</button>
+        </form>
+        <div className="auth-divider"><span>or</span></div>
+        <button className="btn google-btn" type="button" onClick={googleSignIn} disabled={busy}>
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" />
+          continue with google
+        </button>
+        <p className="auth-switch">
+          {mode === 'login' ? "don't have an account? " : 'already have an account? '}
+          <button type="button" onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setErr(''); }}>
+            {mode === 'login' ? 'sign up' : 'sign in'}
+          </button>
+        </p>
+      </div>
+    </div>
+  );
+};
+
 const PAGE_KEYS = ['home', 'games', 'apps', 'tv', 'chatroom', 'settings', 'about'];
-const PAGE_LABELS = { tv: 'TV' };
+const PAGE_LABELS = { tv: 'tv' };
 
 function pageFromHash() {
   const raw = (location.hash || '').replace(/^#/, '').replace(/^\//, '');
@@ -236,7 +357,7 @@ function pageFromHash() {
   return PAGE_KEYS.includes(seg) ? seg : 'home';
 }
 
-const TopBar = ({ page, navigate }) => {
+const TopBar = ({ page, navigate, user, onAccountClick }) => {
   const pages = PAGE_KEYS;
   return (
     <header className="topbar">
@@ -250,9 +371,22 @@ const TopBar = ({ page, navigate }) => {
             <button key={p} type="button" className={cx(page === p && 'active')} onClick={() => navigate(p)}>{PAGE_LABELS[p] || p}</button>
           ))}
         </nav>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginLeft: 'auto' }}>
         <a className="status-chip" href="https://discord.gg/rYWBs6Hezs" target="_blank" rel="noopener noreferrer">
           get more links ↗
         </a>
+        <button className="account-btn" onClick={onAccountClick}>
+          {user ? (
+            <>
+              {user.photoURL
+                ? <img src={user.photoURL} alt="" className="acct-avatar" />
+                : <span className="acct-initial">{(user.displayName || user.email || '?')[0].toUpperCase()}</span>
+              }
+              <span>{user.displayName || user.email?.split('@')[0]}</span>
+            </>
+          ) : 'sign in'}
+        </button>
+        </div>
       </div>
     </header>
   );
@@ -305,10 +439,7 @@ const Home = ({ navigate, voice }) => {
         <div className="hero-actions">
           <button className="btn" onClick={() => navigate('settings')}>tab cloak</button>
           <button className="btn" onClick={() => window.Tinf0il?.openBlank()}>about:blank</button>
-          <button className="btn" onClick={() => navigate('games')}>games</button>
-          <button className="btn" onClick={() => navigate('apps')}>apps</button>
-          <button className="btn" onClick={() => navigate('tv')}>TV</button>
-          <a className="btn discord-btn" href="https://discord.gg/rYWBs6Hezs" target="_blank" rel="noopener noreferrer" data-tooltip="windows exploits · school unblocking · web proxy community">
+<a className="btn discord-btn" href="https://discord.gg/rYWBs6Hezs" target="_blank" rel="noopener noreferrer" data-tooltip="windows exploits · school unblocking · web proxy community">
             join the discord ↗
           </a>
         </div>
@@ -415,13 +546,14 @@ const CatalogThumb = ({ id, title, image }) => {
   );
 };
 
-const Catalog = ({ kind, items, tags, setActiveItem }) => {
+const Catalog = ({ kind, items, tags, setActiveItem, favorites, toggleFav }) => {
   const [search, setSearch] = useState('');
   const [tag, setTag] = useState('all');
   const [showAddOwn, setShowAddOwn] = useState(false);
 
   const storageKey = kind === 'games' ? 'customgames' : 'customapps';
   const defaultTag  = kind === 'games' ? 'arcade' : 'tools';
+  const favIds = favorites?.[kind] || [];
 
   const [customItems, setCustomItems] = useState(() => {
     try {
@@ -434,12 +566,15 @@ const Catalog = ({ kind, items, tags, setActiveItem }) => {
 
   const filtered = useMemo(() =>
     allItems.filter(it => {
+      if (tag === '★ saved') return favIds.includes(it.id);
       if (tag !== 'all' && it.tag !== tag) return false;
       if (search && !it.title.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     }),
-    [allItems, search, tag]
+    [allItems, search, tag, favIds]
   );
+
+  const allTags = useMemo(() => ['★ saved', ...tags], [tags]);
 
   const handleSave = ({ title, url, image }) => {
     const newItem = {
@@ -472,7 +607,7 @@ const Catalog = ({ kind, items, tags, setActiveItem }) => {
           <div className="toolbar-left">
             <span className="toolbar-count">{filtered.length} / {allItems.length}</span>
             <div className="chip-row">
-              {tags.map(t => (
+              {allTags.map(t => (
                 <button key={t} className={cx('chip', tag === t && 'active')} onClick={() => setTag(t)}>{t}</button>
               ))}
             </div>
@@ -495,24 +630,34 @@ const Catalog = ({ kind, items, tags, setActiveItem }) => {
               <span className="name">add your own</span>
             </div>
           </button>
-          {filtered.map((it, i) => (
-            <button key={it.id} className="catalog-card" onClick={() => {
-              if (it.custom) {
-                window.location.href = `/load.html?url=${encodeURIComponent(it.url)}`;
-              } else {
-                const param = kind === 'games' ? 'game' : 'app';
-                window.location.href = `/load.html?${param}=${encodeURIComponent(it.id)}`;
-              }
-            }}>
-              <div className="thumb">
-                <CatalogThumb id={it.id} title={it.title} image={it.image} />
-              </div>
-              <div className="meta">
-                <span className="name">{it.title}</span>
-                <span className="id-tag">{String(i + 1).padStart(3, '0')}</span>
-              </div>
-            </button>
-          ))}
+          {filtered.map((it, i) => {
+            const isFav = favIds.includes(it.id);
+            return (
+              <button key={it.id} className="catalog-card" onClick={() => {
+                if (it.custom) {
+                  window.location.href = `/load.html?url=${encodeURIComponent(it.url)}`;
+                } else {
+                  const param = kind === 'games' ? 'game' : 'app';
+                  window.location.href = `/load.html?${param}=${encodeURIComponent(it.id)}`;
+                }
+              }}>
+                <div className="thumb">
+                  <CatalogThumb id={it.id} title={it.title} image={it.image} />
+                </div>
+                <div className="meta">
+                  <span className="name">{it.title}</span>
+                  <span className="id-tag">{String(i + 1).padStart(3, '0')}</span>
+                </div>
+                <button
+                  className={cx('fav-btn', isFav && 'active')}
+                  onClick={e => { e.stopPropagation(); toggleFav?.(kind, it.id); }}
+                  title={isFav ? 'remove from saved' : 'save'}
+                >
+                  {isFav ? '♥' : '♡'}
+                </button>
+              </button>
+            );
+          })}
         </div>
       </section>
     </main>
@@ -654,7 +799,15 @@ const Tinf0ilTV = () => {
   );
 };
 
-const Settings = ({ theme, setTheme }) => {
+const CURSOR_OPTIONS = [
+  { id: 'dot',   label: 'dot',   preview: <div className="cp-dot" /> },
+  { id: 'ring',  label: 'ring',  preview: <div className="cp-ring" /> },
+  { id: 'glow',  label: 'glow',  preview: <div className="cp-glow" /> },
+  { id: 'cross', label: 'cross', preview: <div className="cp-cross" /> },
+  { id: 'off',   label: 'off',   preview: <div className="cp-off">↖</div> },
+];
+
+const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setReduce, bigText, setBigText, user, onSignOut, onShowAuth, onCloakSave, syncStatus }) => {
   const initial = useMemo(() => readInitialCloak(), []);
   const [cloakPresetId, setCloakPresetId] = useState(initial.cloakPresetId);
   const [cloakTitle, setCloakTitle] = useState(initial.cloakTitle);
@@ -731,8 +884,6 @@ const Settings = ({ theme, setTheme }) => {
 
   const [autoBlank, setAutoBlank] = useState(false);
   const [stealth, setStealth] = useState(true);
-  const [reduce, setReduce] = useState(false);
-  const [bigText, setBigText] = useState(false);
 
   const [panicKey, setPanicKey] = useState(() => localStorage.getItem('tinf0ilPanicKey') || 'Escape');
   const [panicUrl, setPanicUrl] = useState(() => localStorage.getItem('tinf0ilPanicUrl') || '');
@@ -847,6 +998,7 @@ const Settings = ({ theme, setTheme }) => {
                 document.title = cloakTitle || 'tinf0il';
                 const fav = document.querySelector("link[rel='icon']");
                 if (fav && cloakIcon) fav.href = cloakIcon;
+                onCloakSave?.({ title: cloakTitle, icon: cloakIcon, presetId: cloakPresetId, host: cloakAddressHost });
               }}>save</button>
               <button className="btn" onClick={() => {
                 window.Tinf0ilSettings?.clear();
@@ -875,6 +1027,20 @@ const Settings = ({ theme, setTheme }) => {
                 <button key={t.id} className={cx('theme-swatch', theme === t.id && 'on')} onClick={() => setTheme(t.id)}>
                   <div className="pal">{t.pal.map((c, i) => <i key={i} style={{ background: c }} />)}</div>
                   <div className="name">{t.name}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="panel">
+            <span className="panel-tag">// cursor</span>
+            <h3>cursor style</h3>
+            <p className="h-sub">pick your pointer vibe.</p>
+            <div className="cursor-grid">
+              {CURSOR_OPTIONS.map(o => (
+                <button key={o.id} className={cx('cursor-swatch', cursorStyle === o.id && 'on')} onClick={() => setCursorStyle(o.id)}>
+                  <div className="cursor-preview">{o.preview}</div>
+                  <div className="name">{o.label}</div>
                 </button>
               ))}
             </div>
@@ -925,6 +1091,34 @@ const Settings = ({ theme, setTheme }) => {
               />
             </div>
           </div>
+
+          <div className="panel">
+            <span className="panel-tag">// account</span>
+            <h3>account</h3>
+            {user ? (
+              <>
+                <div className="account-info">
+                  {user.photoURL
+                    ? <img src={user.photoURL} alt="" className="acct-avatar-lg" />
+                    : <div className="acct-initial-lg">{(user.displayName || user.email || '?')[0].toUpperCase()}</div>
+                  }
+                  <div>
+                    <div className="acct-name">{user.displayName || user.email?.split('@')[0]}</div>
+                    <div className="acct-email">{user.email}</div>
+                  </div>
+                </div>
+                {syncStatus && <p className={cx('sync-status', syncStatus === 'saved' && 'ok')}>{syncStatus}</p>}
+                <button className="btn" style={{ marginTop: 12 }} onClick={onSignOut}>sign out</button>
+              </>
+            ) : (
+              <>
+                <p className="h-sub">sign in to sync settings and favorites across devices.</p>
+                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                  <button className="btn accent" onClick={onShowAuth}>sign in</button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </section>
     </main>
@@ -935,7 +1129,7 @@ const About = () => (
   <main>
     <section className="shell page-hero">
       <h1>tinf<em>0</em>il</h1>
-      <p className="lede">a lightweight proxy portal. browse, play, work — privately.</p>
+      <p className="lede">a lightweight proxy portal. browse, play, work. privately.</p>
     </section>
 
     <section className="shell about-grid">
@@ -943,7 +1137,7 @@ const About = () => (
         <span className="panel-tag">// the deal</span>
         <h3>why this exists</h3>
         <p className="h-sub" style={{ fontSize: 14, lineHeight: 1.7 }}>
-          ads everywhere, paywalls everywhere, your school blocking half the web. tinf0il is a clean room — route what you need, skip the noise, don't get tracked doing it. that's the whole pitch.
+          ads everywhere, paywalls everywhere, your school blocking half the web. tinf0il is a clean room. route what you need, skip the noise, don't get tracked doing it. that's the whole pitch.
         </p>
         <div className="tile-row">
           <div className="tile"><div className="num">{window.GAMES?.length ?? "—"}</div><div className="lab">games</div></div>
@@ -1093,6 +1287,139 @@ const App = () => {
   const [theme, setTheme] = useState(tweaks.theme);
   const [activeItem, setActiveItem] = useState(null);
 
+  // ── cursor ──
+  const [cursorStyle, setCursorStyleState] = useState(() => localStorage.getItem('tinf0ilCursor') || 'dot');
+  const setCursorStyle = (v) => { setCursorStyleState(v); localStorage.setItem('tinf0ilCursor', v); };
+
+  // ── reduce motion ──
+  const [reduce, setReduceState] = useState(() => {
+    const v = localStorage.getItem('tinf0ilReduce') === 'true';
+    if (v) document.documentElement.setAttribute('data-reduce-motion', '');
+    return v;
+  });
+  const setReduce = (v) => {
+    setReduceState(v);
+    localStorage.setItem('tinf0ilReduce', v);
+    if (v) document.documentElement.setAttribute('data-reduce-motion', '');
+    else document.documentElement.removeAttribute('data-reduce-motion');
+  };
+
+  // ── big text ──
+  const [bigText, setBigTextState] = useState(() => {
+    const v = localStorage.getItem('tinf0ilBigText') === 'true';
+    if (v) document.documentElement.setAttribute('data-big-text', '');
+    return v;
+  });
+  const setBigText = (v) => {
+    setBigTextState(v);
+    localStorage.setItem('tinf0ilBigText', v);
+    if (v) document.documentElement.setAttribute('data-big-text', '');
+    else document.documentElement.removeAttribute('data-big-text');
+  };
+
+  // ── auth ──
+  const [user, setUser] = useState(null);
+  const [showAuth, setShowAuth] = useState(false);
+  const [syncStatus, setSyncStatus] = useState('');
+  const syncTimer = useRef(null);
+  const userRef = useRef(null);
+  userRef.current = user;
+
+  // ── favorites ──
+  const [favorites, setFavoritesState] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('tinf0ilFavorites') || '{"games":[],"apps":[]}'); }
+    catch { return { games: [], apps: [] }; }
+  });
+
+  const saveFavs = (updated, uid) => {
+    localStorage.setItem('tinf0ilFavorites', JSON.stringify(updated));
+    if (uid) window.fbDb?.collection('proxy-users').doc(uid).set({ favorites: updated }, { merge: true }).catch(() => {});
+  };
+
+  const toggleFav = (kind, id) => {
+    setFavoritesState(prev => {
+      const arr = prev[kind] || [];
+      const next = arr.includes(id) ? arr.filter(x => x !== id) : [...arr, id];
+      const updated = { ...prev, [kind]: next };
+      saveFavs(updated, userRef.current?.uid);
+      return updated;
+    });
+  };
+
+  // ── cloud sync helpers ──
+  const cloudSettings = () => ({
+    theme, cursorStyle, reduce, bigText,
+    panicKey: localStorage.getItem('tinf0ilPanicKey') || 'Escape',
+    panicUrl: localStorage.getItem('tinf0ilPanicUrl') || '',
+  });
+
+  const pushSettings = (extra = {}) => {
+    const uid = userRef.current?.uid;
+    if (!uid) return;
+    clearTimeout(syncTimer.current);
+    setSyncStatus('saving...');
+    syncTimer.current = setTimeout(() => {
+      window.fbDb?.collection('proxy-users').doc(uid)
+        .set({ settings: { ...cloudSettings(), ...extra } }, { merge: true })
+        .then(() => setSyncStatus('saved'))
+        .catch(() => setSyncStatus('sync failed'));
+    }, 1200);
+  };
+
+  const applyCloudSettings = (s) => {
+    if (!s) return;
+    if (s.theme)       { setTheme(s.theme); document.documentElement.setAttribute('data-theme', s.theme); }
+    if (s.cursorStyle) setCursorStyleState(s.cursorStyle);
+    if (s.reduce  != null) setReduce(s.reduce);
+    if (s.bigText != null) setBigText(s.bigText);
+    if (s.panicKey) localStorage.setItem('tinf0ilPanicKey', s.panicKey);
+    if (s.panicUrl != null) localStorage.setItem('tinf0ilPanicUrl', s.panicUrl);
+    if (s.cloak) {
+      if (s.cloak.title) localStorage.setItem('websiteTitle', s.cloak.title);
+      if (s.cloak.icon)  localStorage.setItem('websiteIcon',  s.cloak.icon);
+      if (s.cloak.host)  localStorage.setItem('websiteCloakHost', s.cloak.host);
+      if (s.cloak.presetId) localStorage.setItem('websiteCloakPreset', s.cloak.presetId);
+    }
+  };
+
+  // ── auth listener ──
+  useEffect(() => {
+    if (!window.fbAuth) return;
+    const unsub = window.fbAuth.onAuthStateChanged(async (u) => {
+      setUser(u);
+      if (u) {
+        try {
+          const snap = await window.fbDb.collection('proxy-users').doc(u.uid).get();
+          if (snap.exists) {
+            const data = snap.data();
+            applyCloudSettings(data.settings);
+            if (data.favorites) {
+              setFavoritesState(data.favorites);
+              localStorage.setItem('tinf0ilFavorites', JSON.stringify(data.favorites));
+            }
+            setSyncStatus('saved');
+          } else {
+            await window.fbDb.collection('proxy-users').doc(u.uid).set({
+              email: u.email,
+              displayName: u.displayName || '',
+              photoURL: u.photoURL || '',
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              settings: cloudSettings(),
+              favorites,
+            });
+            setSyncStatus('saved');
+          }
+        } catch { setSyncStatus('sync failed'); }
+      } else {
+        setSyncStatus('');
+      }
+    });
+    return unsub;
+  }, []);
+
+  // auto-push when toggleable settings change
+  useEffect(() => { if (user) pushSettings(); }, [theme, cursorStyle, reduce, bigText]);
+
   const navigate = (next) => {
     const p = PAGE_KEYS.includes(next) ? next : 'home';
     setPageState(p);
@@ -1121,25 +1448,30 @@ const App = () => {
   useEffect(() => { setTheme(tweaks.theme); }, [tweaks.theme]);
   useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
   useEffect(() => {
+    if (localStorage.getItem('websiteTitle')) return;
     const titles = { home: 'tinf0il · home', games: 'tinf0il · games', apps: 'tinf0il · apps', tv: 'tinf0il TV', chatroom: 'tinf0il · chatroom', settings: 'tinf0il · settings', about: 'tinf0il · about' };
     document.title = titles[page] || 'tinf0il';
   }, [page]);
 
   const voice = VOICE_PRESETS[tweaks.voice] || VOICE_PRESETS.punchy;
+  const handleSignOut = () => window.fbAuth?.signOut().catch(() => {});
+  const handleAccountClick = () => user ? navigate('settings') : setShowAuth(true);
 
   return (
     <>
-      <TopBar page={page} navigate={navigate} />
+      <CustomCursor cursorStyle={cursorStyle} />
+      <TopBar page={page} navigate={navigate} user={user} onAccountClick={handleAccountClick} />
 
       {page === 'home'     && <Home navigate={navigate} voice={voice} />}
-      {page === 'games'    && <Catalog kind="games" items={window.GAMES} tags={window.GAME_TAGS} setActiveItem={setActiveItem} />}
-      {page === 'apps'     && <Catalog kind="apps"  items={window.APPS}  tags={window.APP_TAGS}  setActiveItem={setActiveItem} />}
+      {page === 'games'    && <Catalog kind="games" items={window.GAMES} tags={window.GAME_TAGS} setActiveItem={setActiveItem} favorites={favorites} toggleFav={toggleFav} />}
+      {page === 'apps'     && <Catalog kind="apps"  items={window.APPS}  tags={window.APP_TAGS}  setActiveItem={setActiveItem} favorites={favorites} toggleFav={toggleFav} />}
       {page === 'tv'       && <Tinf0ilTV />}
       {page === 'chatroom' && <Chatroom />}
-      {page === 'settings' && <Settings theme={theme} setTheme={t => { setTheme(t); setTweak('theme', t); }} />}
+      {page === 'settings' && <Settings theme={theme} setTheme={t => { setTheme(t); setTweak('theme', t); }} cursorStyle={cursorStyle} setCursorStyle={setCursorStyle} reduce={reduce} setReduce={setReduce} bigText={bigText} setBigText={setBigText} user={user} onSignOut={handleSignOut} onShowAuth={() => setShowAuth(true)} onCloakSave={c => pushSettings({ cloak: c })} syncStatus={syncStatus} />}
       {page === 'about'    && <About />}
 
-      {page !== 'tv' && <Footer />}
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      <Footer />
       <LaunchModal item={activeItem} onClose={() => setActiveItem(null)} />
 
       <TweaksPanel title="Tweaks" defaultOpen={false}>

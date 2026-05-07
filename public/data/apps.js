@@ -27,7 +27,7 @@ var apps = [
       'id': 'vscode',
       'title': 'Visual Studio Code',
       'url': 'https://vscode.dev/',
-      'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Visual_Studio_Code_1.35_icon.svg/1024px-Visual_Studio_Code_1.35_icon.svg.png'
+      'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Visual_Studio_Code_1.35_icon.svg/250px-Visual_Studio_Code_1.35_icon.svg.png?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=thumbnail'
     },
     {
       "id": "tiktok",
@@ -72,12 +72,6 @@ var apps = [
       'image': 'https://images.chesscomfiles.com/uploads/v1/images_users/tiny_mce/SamCopeland/phpmeXx6V.png'
     },
     {
-      'id': 'movieweb',
-      'title': 'tinf0il TV',
-      'url': '/tv/',
-      'image': '/assets/foil.png'
-    },
-    {
       'id': 'coolmathgames',
       'title': 'Cool Math Games',
       'url': 'https://coolmathgames.com',
@@ -87,7 +81,7 @@ var apps = [
       'id': 'win11',
       'title': 'Windows 11 in React',
       'url': 'https://win11.blueedge.me/',
-      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Windows_11_Logo.svg/800px-Windows_11_Logo.svg.png",
+      "image": "https://365cloudstore.com/wp-content/uploads/2023/02/windows-11-500x500-01.png",
       "description": "A remake of the Windows 11 UI in React.js"
     },
     {
