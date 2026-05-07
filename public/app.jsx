@@ -227,7 +227,8 @@ const FloatingLogo = () => {
   );
 };
 
-const PAGE_KEYS = ['home', 'games', 'apps', 'chatroom', 'settings', 'about'];
+const PAGE_KEYS = ['home', 'games', 'apps', 'tv', 'chatroom', 'settings', 'about'];
+const PAGE_LABELS = { tv: 'TV' };
 
 function pageFromHash() {
   const raw = (location.hash || '').replace(/^#/, '').replace(/^\//, '');
@@ -246,7 +247,7 @@ const TopBar = ({ page, navigate }) => {
         </a>
         <nav className="nav-pill">
           {pages.map(p => (
-            <button key={p} type="button" className={cx(page === p && 'active')} onClick={() => navigate(p)}>{p}</button>
+            <button key={p} type="button" className={cx(page === p && 'active')} onClick={() => navigate(p)}>{PAGE_LABELS[p] || p}</button>
           ))}
         </nav>
         <a className="status-chip" href="https://discord.gg/rYWBs6Hezs" target="_blank" rel="noopener noreferrer">
@@ -306,6 +307,7 @@ const Home = ({ navigate, voice }) => {
           <button className="btn" onClick={() => window.Tinf0il?.openBlank()}>about:blank</button>
           <button className="btn" onClick={() => navigate('games')}>games</button>
           <button className="btn" onClick={() => navigate('apps')}>apps</button>
+          <button className="btn" onClick={() => navigate('tv')}>TV</button>
           <a className="btn discord-btn" href="https://discord.gg/rYWBs6Hezs" target="_blank" rel="noopener noreferrer" data-tooltip="windows exploits · school unblocking · web proxy community">
             join the discord ↗
           </a>
@@ -606,6 +608,20 @@ const LaunchModal = ({ item, onClose }) => {
     </div>
   );
 };
+
+const Tinf0ilTV = () => (
+  <main className="tv-page tv-embed-page">
+    <section className="tv-app-frame-wrap" aria-label="tinf0il TV">
+      <iframe
+        className="tv-app-frame"
+        title="tinf0il TV"
+        src="/tv/"
+        allow="autoplay; fullscreen; picture-in-picture"
+        referrerPolicy="no-referrer"
+      />
+    </section>
+  </main>
+);
 
 const Settings = ({ theme, setTheme }) => {
   const initial = useMemo(() => readInitialCloak(), []);
@@ -1074,7 +1090,7 @@ const App = () => {
   useEffect(() => { setTheme(tweaks.theme); }, [tweaks.theme]);
   useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
   useEffect(() => {
-    const titles = { home: 'tinf0il · home', games: 'tinf0il · games', apps: 'tinf0il · apps', chatroom: 'tinf0il · chatroom', settings: 'tinf0il · settings', about: 'tinf0il · about' };
+    const titles = { home: 'tinf0il · home', games: 'tinf0il · games', apps: 'tinf0il · apps', tv: 'tinf0il TV', chatroom: 'tinf0il · chatroom', settings: 'tinf0il · settings', about: 'tinf0il · about' };
     document.title = titles[page] || 'tinf0il';
   }, [page]);
 
@@ -1087,11 +1103,12 @@ const App = () => {
       {page === 'home'     && <Home navigate={navigate} voice={voice} />}
       {page === 'games'    && <Catalog kind="games" items={window.GAMES} tags={window.GAME_TAGS} setActiveItem={setActiveItem} />}
       {page === 'apps'     && <Catalog kind="apps"  items={window.APPS}  tags={window.APP_TAGS}  setActiveItem={setActiveItem} />}
+      {page === 'tv'       && <Tinf0ilTV />}
       {page === 'chatroom' && <Chatroom />}
       {page === 'settings' && <Settings theme={theme} setTheme={t => { setTheme(t); setTweak('theme', t); }} />}
       {page === 'about'    && <About />}
 
-      <Footer />
+      {page !== 'tv' && <Footer />}
       <LaunchModal item={activeItem} onClose={() => setActiveItem(null)} />
 
       <TweaksPanel title="Tweaks" defaultOpen={false}>
@@ -1123,7 +1140,7 @@ const App = () => {
         <TweakSection title="Jump to">
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {PAGE_KEYS.map(p => (
-              <button key={p} type="button" className="chip" onClick={() => navigate(p)}>{p}</button>
+              <button key={p} type="button" className="chip" onClick={() => navigate(p)}>{PAGE_LABELS[p] || p}</button>
             ))}
           </div>
         </TweakSection>

@@ -1,5 +1,9 @@
 import express from "express";
+import { spawn } from "node:child_process";
+import fs from "node:fs";
 import http from "node:http";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { bootstrap } from "./lib/bootstrap-server.js";
 
 /** Default 8787 avoids common Apache/httpd on 8080. Override with PORT (no auto-fallback if set). */
@@ -8,6 +12,51 @@ const portLocked = Boolean(process.env.PORT);
 
 const META_MAX_BYTES = 450_000;
 const META_FETCH_MS = 10_000;
+const TV_PROXY_FETCH_MS = 20_000;
+const TV_APP_FETCH_MS = 30_000;
+const TV_APP_ORIGIN = process.env.TV_APP_ORIGIN || process.env.TV_NEXT_ORIGIN || "http://127.0.0.1:8791";
+const TV_APP_AUTOSTART = process.env.TV_APP_AUTOSTART !== "0" && process.env.TV_NEXT_AUTOSTART !== "0";
+const TV_APP_URL = new URL(TV_APP_ORIGIN);
+const TV_APP_PORT = Number(process.env.TV_APP_PORT || process.env.TV_NEXT_PORT || TV_APP_URL.port || 8791);
+const repoRoot = path.dirname(fileURLToPath(import.meta.url));
+const TV_APP_DIR = path.join(repoRoot, "movie-web");
+const TV_APP_DIST = path.join(TV_APP_DIR, "dist");
+const TV_PROXY_HEADER_MAP = {
+	"x-cookie": "cookie",
+	"x-referer": "referer",
+	"x-origin": "origin",
+	"x-user-agent": "user-agent",
+	"x-x-real-ip": "x-real-ip",
+};
+const TV_PROXY_DIRECT_HEADERS = new Set([
+	"accept",
+	"accept-language",
+	"authorization",
+	"cache-control",
+	"content-type",
+	"pragma",
+	"range",
+	"x-requested-with",
+]);
+const TV_PROXY_BLOCKED_HEADERS = new Set([
+	"connection",
+	"content-length",
+	"host",
+	"sec-fetch-dest",
+	"sec-fetch-mode",
+	"sec-fetch-site",
+	"sec-fetch-user",
+	"upgrade-insecure-requests",
+]);
+const TV_APP_RESPONSE_BLOCKED_HEADERS = new Set([
+	"connection",
+	"content-encoding",
+	"content-length",
+	"keep-alive",
+	"transfer-encoding",
+	"upgrade",
+]);
+const TV_PROXY_PUBLIC_PATH = "/api/tv-proxy";
 
 function decodeBasicEntities(s) {
 	return s
@@ -77,7 +126,305 @@ function parseTabMeta(html, finalUrl) {
 	};
 }
 
+function headerValue(value) {
+	if (Array.isArray(value)) return value.join(", ");
+	if (typeof value === "string") return value;
+	return undefined;
+}
+
+function collectTvProxyHeaders(req) {
+	const headers = {};
+	for (const [name, rawValue] of Object.entries(req.headers)) {
+		const value = headerValue(rawValue);
+		if (!value) continue;
+		const mapped = TV_PROXY_HEADER_MAP[name];
+		if (mapped) {
+			headers[mapped] = value;
+			continue;
+		}
+		if (TV_PROXY_DIRECT_HEADERS.has(name) || (name.startsWith("x-") && !TV_PROXY_BLOCKED_HEADERS.has(name))) {
+			headers[name] = value;
+		}
+	}
+	if (!headers["user-agent"]) {
+		headers["user-agent"] =
+			"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36";
+	}
+	return headers;
+}
+
+function tvProxyDestinationUrl(destination) {
+	return `${TV_PROXY_PUBLIC_PATH}?destination=${encodeURIComponent(destination)}`;
+}
+
+function rewriteM3u8Uri(uri, baseUrl) {
+	try {
+		return tvProxyDestinationUrl(new URL(uri, baseUrl).href);
+	} catch {
+		return uri;
+	}
+}
+
+function rewriteM3u8Line(line, baseUrl) {
+	const trimmed = line.trim();
+	if (!trimmed) return line;
+	if (trimmed.startsWith("#")) {
+		return line
+			.replace(/URI="([^"]+)"/g, (_match, uri) => `URI="${rewriteM3u8Uri(uri, baseUrl)}"`)
+			.replace(/URI='([^']+)'/g, (_match, uri) => `URI='${rewriteM3u8Uri(uri, baseUrl)}'`)
+			.replace(/URI=(?!["'])([^,\s]+)/g, (_match, uri) => `URI=${rewriteM3u8Uri(uri, baseUrl)}`);
+	}
+
+	const leading = line.match(/^\s*/)?.[0] || "";
+	const trailing = line.match(/\s*$/)?.[0] || "";
+	return `${leading}${rewriteM3u8Uri(trimmed, baseUrl)}${trailing}`;
+}
+
+function looksLikeM3u8(destination, contentType, buf) {
+	if (contentType && /mpegurl|m3u8/i.test(contentType)) return true;
+	const prefix = buf.subarray(0, 32).toString("utf8").trimStart();
+	return prefix.startsWith("#EXTM3U");
+}
+
+function rewriteM3u8Manifest(buf, baseUrl) {
+	const text = new TextDecoder("utf-8", { fatal: false }).decode(buf);
+	const newline = text.includes("\r\n") ? "\r\n" : "\n";
+	return Buffer.from(text.split(/\r?\n/).map((line) => rewriteM3u8Line(line, baseUrl)).join(newline), "utf8");
+}
+
+async function readRequestBody(req) {
+	const chunks = [];
+	for await (const chunk of req) {
+		chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+	}
+	return Buffer.concat(chunks);
+}
+
+function collectTvAppHeaders(req) {
+	const headers = {};
+	for (const [name, rawValue] of Object.entries(req.headers)) {
+		if (TV_PROXY_BLOCKED_HEADERS.has(name)) continue;
+		const value = headerValue(rawValue);
+		if (value) headers[name] = value;
+	}
+	const publicHost = headerValue(req.headers.host);
+	if (publicHost) {
+		headers["x-forwarded-host"] = publicHost;
+		headers["x-forwarded-proto"] = "http";
+	}
+	return headers;
+}
+
+async function proxyTvAppRequest(req, res) {
+	const target = new URL(req.originalUrl, TV_APP_ORIGIN);
+	const ctrl = new AbortController();
+	const timeout = setTimeout(() => ctrl.abort(), TV_APP_FETCH_MS);
+	try {
+		const hasBody = req.method !== "GET" && req.method !== "HEAD";
+		const body = hasBody ? await readRequestBody(req) : undefined;
+		const upstream = await fetch(target.href, {
+			method: req.method,
+			redirect: "manual",
+			headers: collectTvAppHeaders(req),
+			body: body && body.length > 0 ? body : undefined,
+			signal: ctrl.signal,
+		});
+		const buf = req.method === "HEAD" ? Buffer.alloc(0) : Buffer.from(await upstream.arrayBuffer());
+		clearTimeout(timeout);
+
+		res.status(upstream.status);
+		upstream.headers.forEach((value, name) => {
+			if (!TV_APP_RESPONSE_BLOCKED_HEADERS.has(name)) res.setHeader(name, value);
+		});
+		const getSetCookie = upstream.headers.getSetCookie;
+		const setCookie =
+			typeof getSetCookie === "function"
+				? getSetCookie.call(upstream.headers)
+				: upstream.headers.get("set-cookie");
+		if (setCookie) res.setHeader("set-cookie", setCookie);
+		res.end(buf);
+	} catch (e) {
+		clearTimeout(timeout);
+		const msg = e?.name === "AbortError" ? "tinf0il TV timed out" : "tinf0il TV is not running";
+		res.status(502).send(msg);
+	}
+}
+
+function applyTvProxyCors(res) {
+	res.setHeader("Access-Control-Allow-Origin", "*");
+	res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS");
+	res.setHeader("Access-Control-Allow-Headers", "*");
+	res.setHeader(
+		"Access-Control-Expose-Headers",
+		"X-Final-Destination, X-Set-Cookie, X-Content-Type, X-Content-Length, X-Location, Content-Range, Accept-Ranges",
+	);
+}
+
 const app = express();
+const tvAppStatic = express.static(TV_APP_DIST, { fallthrough: true });
+
+let tvAppChild = null;
+
+function hasTvAppBuild() {
+	return fs.existsSync(path.join(TV_APP_DIST, "index.html"));
+}
+
+async function isTvAppReachable() {
+	const ctrl = new AbortController();
+	const timeout = setTimeout(() => ctrl.abort(), 1_500);
+	try {
+		const res = await fetch(new URL("/tv/", TV_APP_ORIGIN), {
+			method: "HEAD",
+			redirect: "manual",
+			signal: ctrl.signal,
+		});
+		clearTimeout(timeout);
+		return res.status < 500;
+	} catch {
+		clearTimeout(timeout);
+		return false;
+	}
+}
+
+async function ensureTvAppServer() {
+	if (!TV_APP_AUTOSTART || !["localhost", "127.0.0.1"].includes(TV_APP_URL.hostname)) return;
+	if (!fs.existsSync(path.join(TV_APP_DIR, "package.json"))) return;
+	if (await isTvAppReachable()) return;
+
+	const viteBin = path.join(TV_APP_DIR, "node_modules", "vite", "bin", "vite.js");
+	if (!fs.existsSync(viteBin)) {
+		console.warn("tinf0il TV dependencies are missing. Run npm install --ignore-scripts in movie-web to enable /tv/.");
+		return;
+	}
+
+	const out = fs.openSync(path.join(TV_APP_DIR, "movie-web-vite.out.log"), "a");
+	const err = fs.openSync(path.join(TV_APP_DIR, "movie-web-vite.err.log"), "a");
+	tvAppChild = spawn(process.execPath, [viteBin, "--host", "127.0.0.1", "--port", String(TV_APP_PORT)], {
+		cwd: TV_APP_DIR,
+		env: { ...process.env, PORT: String(TV_APP_PORT) },
+		stdio: ["ignore", out, err],
+		windowsHide: true,
+	});
+	tvAppChild.on("exit", (code, signal) => {
+		if (code !== 0 && signal !== "SIGTERM") {
+			console.warn(`tinf0il TV stopped unexpectedly (${signal || code}).`);
+		}
+		tvAppChild = null;
+	});
+	console.log(`tinf0il TV Vite: ${TV_APP_ORIGIN}/tv/`);
+}
+
+function stopTvAppServer() {
+	if (tvAppChild && !tvAppChild.killed) tvAppChild.kill();
+}
+
+process.once("exit", stopTvAppServer);
+process.once("SIGINT", () => {
+	stopTvAppServer();
+	process.exit(130);
+});
+process.once("SIGTERM", () => {
+	stopTvAppServer();
+	process.exit(143);
+});
+
+app.options("/api/tv-proxy", (_req, res) => {
+	applyTvProxyCors(res);
+	res.status(204).end();
+});
+
+app.all("/api/tv-proxy", async (req, res) => {
+	applyTvProxyCors(res);
+
+	const raw = Array.isArray(req.query.destination)
+		? req.query.destination[0]
+		: req.query.destination;
+	if (!raw || typeof raw !== "string") {
+		res.status(400).json({ error: "missing destination" });
+		return;
+	}
+
+	let destination;
+	try {
+		destination = new URL(raw);
+	} catch {
+		res.status(400).json({ error: "invalid destination" });
+		return;
+	}
+	if (destination.protocol !== "http:" && destination.protocol !== "https:") {
+		res.status(400).json({ error: "only http(s) URLs" });
+		return;
+	}
+
+	const ctrl = new AbortController();
+	const timeout = setTimeout(() => ctrl.abort(), TV_PROXY_FETCH_MS);
+	try {
+		const hasBody = req.method !== "GET" && req.method !== "HEAD";
+		const body = hasBody ? await readRequestBody(req) : undefined;
+		const upstream = await fetch(destination.href, {
+			method: req.method,
+			redirect: "follow",
+			headers: collectTvProxyHeaders(req),
+			body: body && body.length > 0 ? body : undefined,
+			signal: ctrl.signal,
+		});
+		let buf = req.method === "HEAD" ? Buffer.alloc(0) : Buffer.from(await upstream.arrayBuffer());
+		clearTimeout(timeout);
+
+		const contentType = upstream.headers.get("content-type");
+		const isPlaylist = req.method !== "HEAD" && looksLikeM3u8(destination, contentType, buf);
+		if (isPlaylist) {
+			buf = rewriteM3u8Manifest(buf, upstream.url || destination.href);
+		}
+		const contentLength = isPlaylist ? String(buf.length) : upstream.headers.get("content-length");
+		const contentRange = upstream.headers.get("content-range");
+		const acceptRanges = upstream.headers.get("accept-ranges");
+		const location = upstream.headers.get("location");
+		const getSetCookie = upstream.headers.getSetCookie;
+		const setCookie =
+			typeof getSetCookie === "function"
+				? getSetCookie.call(upstream.headers).join(", ")
+				: upstream.headers.get("set-cookie");
+
+		res.status(upstream.status);
+		res.setHeader("X-Final-Destination", upstream.url || destination.href);
+		const responseContentType = isPlaylist
+			? "application/vnd.apple.mpegurl; charset=utf-8"
+			: contentType;
+		if (responseContentType) {
+			res.setHeader("Content-Type", responseContentType);
+			res.setHeader("X-Content-Type", responseContentType);
+		}
+		if (contentLength) res.setHeader("X-Content-Length", contentLength);
+		if (contentRange) res.setHeader("Content-Range", contentRange);
+		if (acceptRanges) res.setHeader("Accept-Ranges", acceptRanges);
+		if (location) res.setHeader("X-Location", location);
+		if (setCookie) res.setHeader("X-Set-Cookie", setCookie);
+		res.end(buf);
+	} catch (e) {
+		clearTimeout(timeout);
+		const msg = e?.name === "AbortError" ? "timeout" : "fetch failed";
+		res.status(502).json({ error: msg });
+	}
+});
+
+app.use("/tv", (req, res, next) => {
+	if (!hasTvAppBuild()) {
+		next();
+		return;
+	}
+	tvAppStatic(req, res, next);
+});
+
+app.get(/^\/tv(?:\/.*)?$/, (req, res, next) => {
+	if (!hasTvAppBuild()) {
+		proxyTvAppRequest(req, res).catch(next);
+		return;
+	}
+	res.sendFile(path.join(TV_APP_DIST, "index.html"));
+});
+
+app.use("/tv", proxyTvAppRequest);
 
 app.get("/api/tab-meta", async (req, res) => {
 	const raw = req.query.url;
@@ -145,6 +492,8 @@ app.use(express.static("public", { fallthrough: true }));
 const { routeRequest, routeUpgrade } = await bootstrap({
 	transport: "libcurl",
 });
+
+if (!hasTvAppBuild()) await ensureTvAppServer();
 
 const server = http.createServer((req, res) => {
 	if (routeRequest(req, res)) return;

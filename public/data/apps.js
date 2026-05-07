@@ -73,9 +73,9 @@ var apps = [
     },
     {
       'id': 'movieweb',
-      'title': '1Shows',
-      'url': 'https://www.1shows.org/',
-      'image': 'https://www.google.com/s2/favicons?domain=1shows.org&sz=128'
+      'title': 'tinf0il TV',
+      'url': '/tv/',
+      'image': '/assets/foil.png'
     },
     {
       'id': 'coolmathgames',
