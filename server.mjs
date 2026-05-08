@@ -411,7 +411,7 @@ app.all("/api/tv-proxy", async (req, res) => {
 	}
 });
 
-app.all(/^\/tv\//, (req, res, next) => {
+app.all(/^\/tv(\/.*)?$/, (req, res, next) => {
 	proxyTvAppRequest(req, res).catch(next);
 });
 

@@ -21,7 +21,7 @@ const nextConfig = {
 
   env: {
     TMDB_API_KEY: "7f07bff404ee5ba865c936f48d41327a",
-    NEXT_PUBLIC_URL: "https://tinf0il.site/tv",
+    NEXT_PUBLIC_URL: "https://tinf0il-111676177226.herokuapp.com/tv",
     NEXT_PUBLIC_ENCRYPTION_KEY: "7327472265ecf9b23e675ada29be11623945fc42580f97f67bf563ca6e3af25e",
     apiKey: "AIzaSyB6_jbjIoS1Vu4Er3FadpMmEnFXEcD9yuo",
     authDomain: "tinf0il-b75b1.firebaseapp.com",
