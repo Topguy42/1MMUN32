@@ -478,7 +478,8 @@ app.get("/api/tab-meta", async (req, res) => {
 
 app.use(express.static("public", { fallthrough: true }));
 
-app.get("*", (req, res, next) => {
+app.use((req, res, next) => {
+	if (req.method !== "GET") return next();
 	if (req.path.startsWith("/api/") || req.path.startsWith("/tv/") || req.path.includes(".")) return next();
 	res.sendFile(path.join(repoRoot, "public", "index.html"));
 });
