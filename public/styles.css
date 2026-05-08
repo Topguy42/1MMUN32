@@ -1029,6 +1029,15 @@ html.cursor-in-iframe * { cursor: auto !important; }
   line-height: 1.6;
 }
 
+.tv-loading-notice {
+  font-size: 11px;
+  color: #f59e0b99;
+  text-align: center;
+  max-width: 300px;
+  line-height: 1.6;
+  margin-top: 10px;
+}
+
 /* ── settings ── */
 .settings-wrap {
   display: grid;

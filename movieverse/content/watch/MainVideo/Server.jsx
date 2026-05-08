@@ -104,6 +104,10 @@ const Server = () => {
         </div>
       </div>
 
+      <div className="bg-[#2a2838] px-4 py-2 flex items-center gap-2 text-amber-400/80 text-xs">
+        <span>⚠</span>
+        <span>Some servers may show popup ads upon clicking. Close any that open — they don't affect playback.</span>
+      </div>
     </div>
   );
 };

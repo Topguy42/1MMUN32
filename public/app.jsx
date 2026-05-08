@@ -787,6 +787,7 @@ const Tinf0ilTV = ({ theme }) => {
             <img src="/assets/foil.png" alt="" className="tv-loading-logo" />
             <span className="tv-loading-label">tinf<em>0</em>il TV</span>
             <div className="tv-loading-bar"><div className="tv-loading-fill" /></div>
+            <p className="tv-loading-notice">⚠ Streaming players may open popup ads upon clicking Close them and playback continues normally</p>
           </div>
         </div>
       )}
@@ -1459,7 +1460,7 @@ const App = () => {
 
   return (
     <>
-      <CustomCursor cursorStyle={cursorStyle} />
+      <CustomCursor cursorStyle={(page === 'tv' || page === 'chatroom') ? 'off' : cursorStyle} />
       <TopBar page={page} navigate={navigate} user={user} onAccountClick={handleAccountClick} />
 
       {page === 'home'     && <Home navigate={navigate} voice={voice} />}
