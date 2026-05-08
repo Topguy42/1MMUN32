@@ -549,8 +549,6 @@ function buildMetaTags(page) {
 	].join("\n  ");
 }
 
-app.use(express.static("public", { fallthrough: true }));
-
 app.use((req, res, next) => {
 	if (req.method !== "GET") return next();
 	if (req.path.startsWith("/api/") || req.path.startsWith("/tv/") || req.path.includes(".")) return next();
@@ -560,6 +558,8 @@ app.use((req, res, next) => {
 	res.setHeader("Content-Type", "text/html; charset=utf-8");
 	res.send(html);
 });
+
+app.use(express.static("public", { fallthrough: true }));
 
 const { routeRequest, routeUpgrade } = await bootstrap({
 	transport: "libcurl",
