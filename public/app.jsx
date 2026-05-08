@@ -770,7 +770,7 @@ const Tinf0ilTV = ({ theme }) => {
         style.id = 'tinf0il-accent';
         doc.head.appendChild(style);
       }
-      style.textContent = `:root { --accent: ${accent}; } body > div:first-child { display: none !important; }`;
+      style.textContent = `:root { --accent: ${accent}; } [data-mv-header] { display: none !important; }`;
     } catch {}
   };
 
