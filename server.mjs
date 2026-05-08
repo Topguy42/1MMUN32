@@ -412,6 +412,11 @@ app.all("/api/tv-proxy", async (req, res) => {
 });
 
 app.all(/^\/tv(\/.*)?$/, (req, res, next) => {
+	if (req.headers['sec-fetch-dest'] === 'document') {
+		const html = getIndexHtml().replace("<!-- PAGE_META -->", buildMetaTags('tv'));
+		res.setHeader("Content-Type", "text/html; charset=utf-8");
+		return res.send(html);
+	}
 	proxyTvAppRequest(req, res).catch(next);
 });
 
@@ -570,6 +575,11 @@ await ensureTvAppServer();
 const server = http.createServer((req, res) => {
 	if (routeRequest(req, res)) return;
 	app(req, res);
+});
+
+server.on('clientError', (err, socket) => {
+	if (err.code === 'ECONNRESET') { socket.destroy(); return; }
+	socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
 });
 
 server.on("upgrade", routeUpgrade);
