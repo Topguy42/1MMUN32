@@ -476,12 +476,89 @@ app.get("/api/tab-meta", async (req, res) => {
 	}
 });
 
+const PAGE_META = {
+	home: {
+		title: "tinf0il · browse privately.",
+		description: "Bypass filters, play games, and route the web privately. Zero logs. No leaks. No ads.",
+		ogTitle: "tinf0il — the internet, unfiltered.",
+		ogDescription: "A proxy portal that actually works. Games, apps, streaming — all routed privately. No logs. No leaks.",
+	},
+	games: {
+		title: "tinf0il · games, unfiltered.",
+		description: "Hundreds of unblocked games, all proxied. No ads, no installs — just tap and play.",
+		ogTitle: "tinf0il Games — unblocked, unfiltered.",
+		ogDescription: "Hundreds of games, zero filters. No ads, no installs. Your school can't stop you now.",
+	},
+	apps: {
+		title: "tinf0il · apps, untangled.",
+		description: "Every web app you actually use, one tap away — all routed privately.",
+		ogTitle: "tinf0il Apps — untangled.",
+		ogDescription: "YouTube, Docs, everything you need — one tap away and fully proxied. No restrictions, no noise.",
+	},
+	tv: {
+		title: "tinf0il TV — stream anything.",
+		description: "Movies and shows, proxied and ad-free. No account. No paywall. Just watch.",
+		ogTitle: "tinf0il TV — stream anything, anywhere.",
+		ogDescription: "Movies and shows routed through tinf0il. No account. No paywall. No ads. Just hit play.",
+	},
+	chatroom: {
+		title: "tinf0il · chatroom",
+		description: "Join the tinf0il community. Talk proxy, games, and everything in between.",
+		ogTitle: "tinf0il Chatroom — come hang.",
+		ogDescription: "The official tinf0il community. Proxy tips, game recs, and the whole vibe. Come through.",
+	},
+	settings: {
+		title: "tinf0il · settings",
+		description: "Cloak your tab, pick a theme, configure a panic key. Make tinf0il yours.",
+		ogTitle: "tinf0il Settings",
+		ogDescription: "Tab cloaking, custom themes, panic key, and more. Make tinf0il yours.",
+	},
+	about: {
+		title: "tinf0il · about",
+		description: "A lightweight proxy portal built on scramjet. Browse, play, work — privately. No logs. No leaks.",
+		ogTitle: "about tinf0il",
+		ogDescription: "Built on scramjet by Mercury Workshop. Zero trackers, zero logs, open source. The clean room the internet needed.",
+	},
+};
+
+const INDEX_HTML_PATH = path.join(repoRoot, "public", "index.html");
+let indexHtmlTemplate = null;
+
+function getIndexHtml() {
+	if (!indexHtmlTemplate) indexHtmlTemplate = fs.readFileSync(INDEX_HTML_PATH, "utf8");
+	return indexHtmlTemplate;
+}
+
+function buildMetaTags(page) {
+	const m = PAGE_META[page] || PAGE_META.home;
+	const origin = "https://tinf0il.site";
+	const image = `${origin}/assets/foil.png`;
+	return [
+		`<title>${m.title}</title>`,
+		`<meta name="description" content="${m.description}">`,
+		`<meta property="og:type" content="website">`,
+		`<meta property="og:site_name" content="tinf0il">`,
+		`<meta property="og:title" content="${m.ogTitle}">`,
+		`<meta property="og:description" content="${m.ogDescription}">`,
+		`<meta property="og:image" content="${image}">`,
+		`<meta property="og:url" content="${origin}${page === "home" ? "/" : `/${page}`}">`,
+		`<meta name="twitter:card" content="summary">`,
+		`<meta name="twitter:title" content="${m.ogTitle}">`,
+		`<meta name="twitter:description" content="${m.ogDescription}">`,
+		`<meta name="twitter:image" content="${image}">`,
+	].join("\n  ");
+}
+
 app.use(express.static("public", { fallthrough: true }));
 
 app.use((req, res, next) => {
 	if (req.method !== "GET") return next();
 	if (req.path.startsWith("/api/") || req.path.startsWith("/tv/") || req.path.includes(".")) return next();
-	res.sendFile(path.join(repoRoot, "public", "index.html"));
+	const seg = req.path.replace(/^\//, "").split("/")[0].toLowerCase();
+	const page = PAGE_META[seg] ? seg : "home";
+	const html = getIndexHtml().replace("<!-- PAGE_META -->", buildMetaTags(page));
+	res.setHeader("Content-Type", "text/html; charset=utf-8");
+	res.send(html);
 });
 
 const { routeRequest, routeUpgrade } = await bootstrap({
