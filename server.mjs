@@ -478,6 +478,11 @@ app.get("/api/tab-meta", async (req, res) => {
 
 app.use(express.static("public", { fallthrough: true }));
 
+app.get("*", (req, res, next) => {
+	if (req.path.startsWith("/api/") || req.path.startsWith("/tv/") || req.path.includes(".")) return next();
+	res.sendFile(path.join(repoRoot, "public", "index.html"));
+});
+
 const { routeRequest, routeUpgrade } = await bootstrap({
 	transport: "libcurl",
 });

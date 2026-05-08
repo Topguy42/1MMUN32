@@ -351,8 +351,8 @@ const AuthModal = ({ onClose }) => {
 const PAGE_KEYS = ['home', 'games', 'apps', 'tv', 'chatroom', 'settings', 'about'];
 const PAGE_LABELS = { tv: 'tv' };
 
-function pageFromHash() {
-  const raw = (location.hash || '').replace(/^#/, '').replace(/^\//, '');
+function pageFromPath() {
+  const raw = location.pathname.replace(/^\//, '');
   const seg = (raw.split('/')[0] || 'home').toLowerCase();
   return PAGE_KEYS.includes(seg) ? seg : 'home';
 }
@@ -362,7 +362,7 @@ const TopBar = ({ page, navigate, user, onAccountClick }) => {
   return (
     <header className="topbar">
       <div className="shell topbar-inner">
-        <a href="/index.html#/home" className="brand" onClick={e => { e.preventDefault(); navigate('home'); }}>
+        <a href="/" className="brand" onClick={e => { e.preventDefault(); navigate('home'); }}>
           <img src="/assets/foil.png" alt="" className="brand-logo" />
           <span>tinf<em>0</em>il</span>
         </a>
@@ -1293,7 +1293,7 @@ const VOICE_PRESETS = {
 
 const App = () => {
   const [tweaks, setTweak] = useTweaks(window.TWEAK_DEFAULTS);
-  const [page, setPageState] = useState(pageFromHash);
+  const [page, setPageState] = useState(pageFromPath);
   const [theme, setTheme] = useState(tweaks.theme);
   const [activeItem, setActiveItem] = useState(null);
 
@@ -1433,26 +1433,16 @@ const App = () => {
   const navigate = (next) => {
     const p = PAGE_KEYS.includes(next) ? next : 'home';
     setPageState(p);
-    const nextHash = `#/${p}`;
-    if (location.hash !== nextHash) {
-      history.pushState({ spa: true, page: p }, '', `${location.pathname}${location.search}${nextHash}`);
+    const nextPath = p === 'home' ? '/' : `/${p}`;
+    if (location.pathname !== nextPath) {
+      history.pushState({ spa: true, page: p }, '', nextPath);
     }
   };
 
   useEffect(() => {
-    if (!location.hash || location.hash === '#' || location.hash === '#/') {
-      history.replaceState({ spa: true, page: 'home' }, '', `${location.pathname}${location.search}#/home`);
-    }
-  }, []);
-
-  useEffect(() => {
-    const syncFromUrl = () => setPageState(pageFromHash());
-    window.addEventListener("hashchange", syncFromUrl);
+    const syncFromUrl = () => setPageState(pageFromPath());
     window.addEventListener("popstate", syncFromUrl);
-    return () => {
-      window.removeEventListener("hashchange", syncFromUrl);
-      window.removeEventListener("popstate", syncFromUrl);
-    };
+    return () => window.removeEventListener("popstate", syncFromUrl);
   }, []);
 
   useEffect(() => { setTheme(tweaks.theme); }, [tweaks.theme]);
