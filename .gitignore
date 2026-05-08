@@ -1,4 +1,6 @@
 node_modules/
+movieverse/node_modules/
+movieverse/.next/
 .env
 .env.local
 .env.*.local

@@ -40,7 +40,7 @@ const ContinueWatchingCard = ({ data, hidden }) => {
 
           <div className="w-full bg-[#404141] h-1 rounded-md">
             <div
-              className="h-full bg-[#dd8dae] rounded-md"
+              className="h-full bg-[var(--accent)] rounded-md"
               style={{ width: `${(data?.episode * 100 / data?.totalepisode) || 0}%` }}
             ></div>
           </div>

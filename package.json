@@ -9,7 +9,8 @@
   "scripts": {
     "start": "node server.mjs",
     "dev": "node server.mjs",
-    "build:games": "node scripts/build-3kh0-games.mjs"
+    "build:games": "node scripts/build-3kh0-games.mjs",
+    "heroku-postbuild": "cd movieverse && npm install && npm run build"
   },
   "dependencies": {
     "express": "^5.1.0"

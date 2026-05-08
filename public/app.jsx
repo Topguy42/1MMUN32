@@ -451,6 +451,7 @@ const Home = ({ navigate, voice }) => {
         )}
       </section>
 
+      <Footer />
     </main>
   );
 };
@@ -754,8 +755,29 @@ const LaunchModal = ({ item, onClose }) => {
   );
 };
 
-const Tinf0ilTV = () => {
+const Tinf0ilTV = ({ theme }) => {
   const [status, setStatus] = useState('loading');
+  const iframeRef = useRef(null);
+
+  const injectAccent = () => {
+    try {
+      const doc = iframeRef.current?.contentDocument;
+      if (!doc) return;
+      const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+      let style = doc.getElementById('tinf0il-accent');
+      if (!style) {
+        style = doc.createElement('style');
+        style.id = 'tinf0il-accent';
+        doc.head.appendChild(style);
+      }
+      style.textContent = `:root { --accent: ${accent}; }`;
+    } catch {}
+  };
+
+  useEffect(() => { injectAccent(); }, [theme]);
+
+  const enterFrame = () => document.documentElement.classList.add('cursor-in-iframe');
+  const leaveFrame = () => document.documentElement.classList.remove('cursor-in-iframe');
 
   return (
     <main className="tv-page tv-embed-page">
@@ -777,8 +799,15 @@ const Tinf0ilTV = () => {
           </div>
         </div>
       )}
-      <section className="tv-app-frame-wrap" aria-label="tinf0il TV" style={{ visibility: status === 'ready' ? 'visible' : 'hidden' }}>
+      <section
+        className="tv-app-frame-wrap"
+        aria-label="tinf0il TV"
+        style={{ visibility: status === 'ready' ? 'visible' : 'hidden' }}
+        onMouseEnter={enterFrame}
+        onMouseLeave={leaveFrame}
+      >
         <iframe
+          ref={iframeRef}
           className="tv-app-frame"
           title="tinf0il TV"
           src="/tv/"
@@ -791,6 +820,7 @@ const Tinf0ilTV = () => {
             } catch {
               setStatus('ready');
             }
+            injectAccent();
           }}
           onError={() => setStatus('error')}
         />
@@ -1015,6 +1045,38 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
               }}>reset</button>
             </div>
           </div>
+
+          <div className="panel">
+            <span className="panel-tag">// escape</span>
+            <h3>panic key</h3>
+            <p className="h-sub">double-tap to instantly ditch the page.</p>
+            <div className="field">
+              <span className="field-label">trigger key</span>
+              <button
+                className={cx('btn', 'panic-key-btn', listeningForKey && 'listening')}
+                onKeyDown={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const k = e.key === ' ' ? 'Space' : e.key;
+                  setPanicKey(k);
+                  savePanic(k, panicUrl);
+                  setListeningForKey(false);
+                }}
+                onClick={() => setListeningForKey(true)}
+                onBlur={() => setListeningForKey(false)}
+              >
+                {listeningForKey ? 'press any key…' : panicKey}
+              </button>
+            </div>
+            <div className="field">
+              <span className="field-label">decoy url <em style={{opacity:0.5}}>(default: your cloak host)</em></span>
+              <input
+                value={panicUrl}
+                onChange={e => { setPanicUrl(e.target.value); savePanic(panicKey, e.target.value); }}
+                placeholder="classroom.google.com"
+              />
+            </div>
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -1058,38 +1120,6 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
                 <button className={cx('tg-switch', val && 'on')} onClick={() => set(!val)} aria-pressed={val} />
               </div>
             ))}
-          </div>
-
-          <div className="panel">
-            <span className="panel-tag">// escape</span>
-            <h3>panic key</h3>
-            <p className="h-sub">double-tap to instantly ditch the page.</p>
-            <div className="field">
-              <span className="field-label">trigger key</span>
-              <button
-                className={cx('btn', 'panic-key-btn', listeningForKey && 'listening')}
-                onKeyDown={e => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const k = e.key === ' ' ? 'Space' : e.key;
-                  setPanicKey(k);
-                  savePanic(k, panicUrl);
-                  setListeningForKey(false);
-                }}
-                onClick={() => setListeningForKey(true)}
-                onBlur={() => setListeningForKey(false)}
-              >
-                {listeningForKey ? 'press any key…' : panicKey}
-              </button>
-            </div>
-            <div className="field">
-              <span className="field-label">decoy url <em style={{opacity:0.5}}>(default: your cloak host)</em></span>
-              <input
-                value={panicUrl}
-                onChange={e => { setPanicUrl(e.target.value); savePanic(panicKey, e.target.value); }}
-                placeholder="classroom.google.com"
-              />
-            </div>
           </div>
 
           <div className="panel">
@@ -1166,39 +1196,19 @@ const About = () => (
   </main>
 );
 
+const WIDGETBOT_SERVER = '1065018473459228783';
+const WIDGETBOT_CHANNEL = '1095365023414616255';
+
 const Chatroom = () => {
-  const mountRef = useRef(null);
-
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.id = 'widgetbot-embed-script';
-    script.src = 'https://cdn.jsdelivr.net/npm/@widgetbot/html-embed@1';
-    script.async = true;
-    document.head.appendChild(script);
-
-    const widget = document.createElement('widgetbot');
-    widget.setAttribute('server', '1065018473459228783');
-    widget.style.cssText = 'width:100%;height:100%;border:none;display:block;';
-
-    if (mountRef.current) mountRef.current.appendChild(widget);
-
-    return () => {
-      script.remove();
-      widget.remove();
-    };
-  }, []);
-
   return (
-    <div
-      ref={mountRef}
-      style={{
-        position: 'fixed',
-        top: 53,
-        left: 0,
-        right: 0,
-        bottom: 0,
-      }}
-    />
+    <div style={{ position: 'fixed', top: 53, left: 0, right: 0, bottom: 0 }}>
+      <iframe
+        src={`https://e.widgetbot.io/channels/${WIDGETBOT_SERVER}/${WIDGETBOT_CHANNEL}`}
+        title="tinf0il chatroom"
+        allow="clipboard-write; fullscreen"
+        style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+      />
+    </div>
   );
 };
 
@@ -1465,13 +1475,12 @@ const App = () => {
       {page === 'home'     && <Home navigate={navigate} voice={voice} />}
       {page === 'games'    && <Catalog kind="games" items={window.GAMES} tags={window.GAME_TAGS} setActiveItem={setActiveItem} favorites={favorites} toggleFav={toggleFav} />}
       {page === 'apps'     && <Catalog kind="apps"  items={window.APPS}  tags={window.APP_TAGS}  setActiveItem={setActiveItem} favorites={favorites} toggleFav={toggleFav} />}
-      {page === 'tv'       && <Tinf0ilTV />}
+      {page === 'tv'       && <Tinf0ilTV theme={theme} />}
       {page === 'chatroom' && <Chatroom />}
       {page === 'settings' && <Settings theme={theme} setTheme={t => { setTheme(t); setTweak('theme', t); }} cursorStyle={cursorStyle} setCursorStyle={setCursorStyle} reduce={reduce} setReduce={setReduce} bigText={bigText} setBigText={setBigText} user={user} onSignOut={handleSignOut} onShowAuth={() => setShowAuth(true)} onCloakSave={c => pushSettings({ cloak: c })} syncStatus={syncStatus} />}
       {page === 'about'    && <About />}
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
-      <Footer />
       <LaunchModal item={activeItem} onClose={() => setActiveItem(null)} />
 
       <TweaksPanel title="Tweaks" defaultOpen={false}>

@@ -945,6 +945,10 @@ main {
   background: var(--bg);
 }
 
+html.cursor-in-iframe .custom-cursor { opacity: 0; pointer-events: none; }
+html.cursor-in-iframe,
+html.cursor-in-iframe * { cursor: auto !important; }
+
 .tv-app-frame {
   display: block;
   width: 100%;
@@ -1538,7 +1542,7 @@ main {
 .catalog-card { position: relative; }
 .fav-btn {
   position: absolute;
-  top: 6px; right: 6px;
+  top: 12px; right: 12px;
   appearance: none;
   background: rgba(0,0,0,0.45);
   border: none;

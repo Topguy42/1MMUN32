@@ -14,14 +14,14 @@ const Categorys = () => {
   return (
     <div className="flex justify-center gap-6 flex-wrap" >
 
-      <div className="w-64 h-44 max-[535px]:mr-24 max-[535px]:mt-4 rounded-lg border-2 border-[#fce3ee88] flex flex-col justify-between items-center cursor-pointer text-white py-6 transition-all hover:bg-[#f485b0] hover:shadow-[0px_0px_20px_2px_#f485b0] group">
-        <div className="text-[#f070a8e4] font-['poppins'] text-[15px] font-semibold">TOTAL MINUTES</div>
-        <div className="relative text-4xl text-[#ff1940]">
+      <div className="w-64 h-44 max-[535px]:mr-24 max-[535px]:mt-4 rounded-lg border-2 border-[var(--accent)]/30 flex flex-col justify-between items-center cursor-pointer text-white py-6 transition-all hover:bg-[var(--accent)] hover:shadow-[0px_0px_20px_2px_var(--accent)] group">
+        <div className="text-[var(--accent)] font-['poppins'] text-[15px] font-semibold">TOTAL MINUTES</div>
+        <div className="relative text-4xl text-[var(--accent)]">
           <div><LuClock3 /></div>
           <div className="absolute top-[40%] left-[40%] text-[#e6e4e476] text-[28px] -z-10 transition-all group-hover:text-4xl group-hover:top-0 group-hover:left-0"><LuClock3 /></div>
         </div>
 
-        <div className="font-['poppins'] font-bold text-[#d23758]">{900}+</div>
+        <div className="font-['poppins'] font-bold text-[var(--accent)]">{900}+</div>
       </div>
 
       <div className="w-64 h-44 min-[535px]:mt-12 max-[535px]:ml-24 rounded-lg border-2 border-[#d9e8d988] flex flex-col justify-between items-center cursor-pointer text-white py-6 transition-all hover:bg-[#d9e8d9] hover:shadow-[0px_0px_20px_2px_#d9e8d9] group">

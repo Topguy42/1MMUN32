@@ -7,6 +7,7 @@
   --text: #f6fbff;
   --muted: #9caebc;
   --line: rgba(255, 255, 255, 0.14);
+  --accent: #7eb8a4;
   --green: #8cff6a;
   --cyan: #69e4ff;
   --coral: #ff7a6b;
@@ -23,7 +24,16 @@
   --text: #101820;
   --muted: #52606b;
   --line: rgba(11, 15, 20, 0.14);
+  --accent: #4a8a74;
   --shadow: 0 24px 80px rgba(26, 42, 51, 0.16);
+}
+
+:root[data-theme="midnight"] {
+  --accent: #69b4cc;
+}
+
+:root[data-theme="bubblegum"] {
+  --accent: #c47aaa;
 }
 
 :root[data-theme="juice"] {
@@ -555,19 +565,20 @@ a {
 }
 
 .browser-nav-tabs a {
-  padding: 6px 10px;
+  padding: 5px 12px;
   border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-family: inherit;
+  font-size: 13px;
   color: var(--muted);
   text-decoration: none;
   white-space: nowrap;
+  transition: color 140ms, background 140ms;
 }
 
 .browser-nav-tabs a:hover,
 .browser-nav-tabs a.active {
   color: var(--text);
-  background: var(--panel);
+  background: var(--panel-strong);
 }
 
 .browser-omnibox {
@@ -606,8 +617,8 @@ a {
   padding: 0 12px;
   border: 0;
   border-radius: 999px;
-  background: var(--green);
-  color: #071009;
+  background: var(--accent);
+  color: var(--bg);
   font: inherit;
   font-size: 0.75rem;
   font-weight: 850;

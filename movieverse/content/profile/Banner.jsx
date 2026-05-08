@@ -27,17 +27,17 @@ const Banner = ({ info, totalMovies, loading }) => {
 
           <div className="flex flex-col items-center">
             <div className="font-semibold">{loading ? 0 : (totalMovies?.breakdown?.find(data => data?.status === "COMPLETED")?.count || 0)}</div>
-            <div className="font-['Rubik'] text-[15px] font-medium text-[#c86e8e] text-center">Movies/TV Watched</div>
+            <div className="font-['Rubik'] text-[15px] font-medium text-[var(--accent)] text-center">Movies/TV Watched</div>
           </div>
 
           <div className="flex flex-col items-center">
             <div className="font-semibold">{loading ? 0 : info?.episodesWatched}</div>
-            <div className="font-['Rubik'] text-[15px] font-medium text-[#c86e8e] text-center">Episodes Watched</div>
+            <div className="font-['Rubik'] text-[15px] font-medium text-[var(--accent)] text-center">Episodes Watched</div>
           </div>
 
           <div className="flex flex-col items-center">
             <div className="font-semibold">{totalMovies?.total || 0}</div>
-            <div className="font-['Rubik'] text-[15px] font-medium text-[#c86e8e] text-center">Total Movies/TV</div>
+            <div className="font-['Rubik'] text-[15px] font-medium text-[var(--accent)] text-center">Total Movies/TV</div>
           </div>
 
 

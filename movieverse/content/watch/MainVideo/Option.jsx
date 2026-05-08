@@ -28,18 +28,18 @@ const Option = ({ isMovieExists }) => {
         >
           <span><FaLightbulb /></span>
           Light
-          <span className="text-[#e26bbd]">{watchSetting.light ? "On" : "Off"}</span>
+          <span className="text-[var(--accent)]">{watchSetting.light ? "On" : "Off"}</span>
         </div>
 
         <div
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => setWatchSetting(prev => ({ ...prev, autoPlay: !prev.autoPlay }))}
-        >Auto Play <span className="text-[#e26bbd]">{watchSetting.autoPlay ? "On" : "Off"}</span></div>
+        >Auto Play <span className="text-[var(--accent)]">{watchSetting.autoPlay ? "On" : "Off"}</span></div>
 
         <div
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => setWatchSetting(prev => ({ ...prev, autoNext: !prev.autoNext }))}
-        >Auto Next <span className="text-[#e26bbd]">{watchSetting.autoNext ? "On" : "Off"}</span></div>
+        >Auto Next <span className="text-[var(--accent)]">{watchSetting.autoNext ? "On" : "Off"}</span></div>
 
       </div>
 
