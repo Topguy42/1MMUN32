@@ -5,7 +5,8 @@ const RELAY = process.env.NEXT_PUBLIC_SPORTS_RELAY
 async function fetchNtvsData() {
   // If a relay URL is configured, use it (runs on CF edge — not blocked by ntvs.cx)
   if (RELAY) {
-    const res = await fetch(RELAY)
+    const relayUrl = RELAY.startsWith("http") ? RELAY : `https://${RELAY}`
+    const res = await fetch(relayUrl)
     if (res.ok) {
       const data = await res.json()
       if (data.success) return data
