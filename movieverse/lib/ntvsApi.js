@@ -1,5 +1,18 @@
+// Set NEXT_PUBLIC_SPORTS_RELAY to a Cloudflare Worker URL to bypass server IP blocks.
+// Worker code: https://github.com/Aluminum-Depot/Tinf0il#sports-relay
+const RELAY = process.env.NEXT_PUBLIC_SPORTS_RELAY
+
 async function fetchNtvsData() {
-  // Try direct browser fetch first (user's own IP — bypasses cloud IP blocks if CORS allows)
+  // If a relay URL is configured, use it (runs on CF edge — not blocked by ntvs.cx)
+  if (RELAY) {
+    const res = await fetch(RELAY)
+    if (res.ok) {
+      const data = await res.json()
+      if (data.success) return data
+    }
+  }
+
+  // Direct browser fetch (works if ntvs.cx allows CORS from this origin)
   try {
     const res = await fetch("https://ntvs.cx/api/get-matches?server=kobra&type=both", {
       headers: { Accept: "application/json" },
@@ -10,10 +23,10 @@ async function fetchNtvsData() {
     }
   } catch {}
 
-  // Fallback: dedicated Express endpoint with full browser headers
+  // Last resort: server-side proxy (will 403 on cloud hosts with blocked IPs)
   const res = await fetch("/api/sports/live")
-  const data = await res.json()
-  if (!res.ok) throw new Error(data.error || `${res.status}`)
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error || `server ${res.status}`)
   if (!data.success) throw new Error("API returned failure")
   return data
 }
