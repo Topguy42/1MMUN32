@@ -1,5 +1,12 @@
 export async function getNtvsEvents() {
-  const res = await fetch("/tv/api/sports/live")
+  const target = "https://ntvs.cx/api/get-matches?server=kobra&type=both"
+  const res = await fetch(`/api/tv-proxy?destination=${encodeURIComponent(target)}`, {
+    headers: {
+      "x-referer": "https://ntvs.cx/",
+      "x-user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      accept: "application/json",
+    },
+  })
   if (!res.ok) throw new Error("API error")
   const data = await res.json()
   if (!data.success) throw new Error("API returned failure")
