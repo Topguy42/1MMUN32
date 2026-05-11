@@ -1,25 +1,19 @@
 async function fetchNtvsData() {
-  const target = "https://ntvs.cx/api/get-matches?server=kobra&type=both"
-
-  // Try direct browser fetch first (user's IP, not the server's — avoids cloud IP blocks)
+  // Try direct browser fetch first (user's own IP — bypasses cloud IP blocks if CORS allows)
   try {
-    const res = await fetch(target, { headers: { Accept: "application/json" } })
+    const res = await fetch("https://ntvs.cx/api/get-matches?server=kobra&type=both", {
+      headers: { Accept: "application/json" },
+    })
     if (res.ok) {
       const data = await res.json()
       if (data.success) return data
     }
   } catch {}
 
-  // Fallback: route through the server proxy
-  const res = await fetch(`/api/tv-proxy?destination=${encodeURIComponent(target)}`, {
-    headers: {
-      "x-referer": "https://ntvs.cx/",
-      "x-user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-      accept: "application/json",
-    },
-  })
-  if (!res.ok) throw new Error(`proxy ${res.status}`)
+  // Fallback: dedicated Express endpoint with full browser headers
+  const res = await fetch("/api/sports/live")
   const data = await res.json()
+  if (!res.ok) throw new Error(data.error || `${res.status}`)
   if (!data.success) throw new Error("API returned failure")
   return data
 }

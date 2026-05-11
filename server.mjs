@@ -331,6 +331,30 @@ process.once("SIGTERM", () => {
 	process.exit(143);
 });
 
+app.get("/api/sports/live", async (req, res) => {
+	res.setHeader("Access-Control-Allow-Origin", "*");
+	res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=30");
+	try {
+		const r = await fetch("https://ntvs.cx/api/get-matches?server=kobra&type=both", {
+			headers: {
+				"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+				"Accept": "application/json, text/plain, */*",
+				"Accept-Language": "en-US,en;q=0.9",
+				"Origin": "https://ntvs.cx",
+				"Referer": "https://ntvs.cx/",
+			},
+		});
+		const text = await r.text();
+		if (!r.ok) {
+			return res.status(502).json({ success: false, error: `ntvs ${r.status}`, body: text.slice(0, 300) });
+		}
+		const data = JSON.parse(text);
+		res.json(data);
+	} catch (e) {
+		res.status(502).json({ success: false, error: String(e) });
+	}
+});
+
 app.options("/api/tv-proxy", (_req, res) => {
 	applyTvProxyCors(res);
 	res.status(204).end();
