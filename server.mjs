@@ -334,6 +334,22 @@ process.once("SIGTERM", () => {
 app.get("/api/sports/live", async (req, res) => {
 	res.setHeader("Access-Control-Allow-Origin", "*");
 	res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=30");
+
+	const relay = process.env.SPORTS_RELAY || process.env.NEXT_PUBLIC_SPORTS_RELAY;
+
+	// Try CF Worker relay first (bypasses ntvs.cx IP block on cloud hosts)
+	if (relay) {
+		try {
+			const relayUrl = relay.startsWith("http") ? relay : `https://${relay}`;
+			const r = await fetch(relayUrl);
+			if (r.ok) {
+				const data = await r.json();
+				if (data.success) return res.json(data);
+			}
+		} catch {}
+	}
+
+	// Direct fetch fallback
 	try {
 		const r = await fetch("https://ntvs.cx/api/get-matches?server=kobra&type=both", {
 			headers: {
