@@ -1,16 +1,26 @@
 import { LuExpand } from "react-icons/lu";
-import { FaForward, FaLightbulb } from "react-icons/fa6";
+import { FaForward, FaLightbulb, FaShareNodes } from "react-icons/fa6";
 import { FaBackward } from "react-icons/fa";
 import { useWatchSettingContext } from "@/context/WatchSetting";
 import { useWatchContext } from "@/context/Watch";
 import { BiCollapse } from "react-icons/bi";
 import AddToList from "@/components/AddToList";
 import { useUserInfoContext } from "@/context/UserInfoContext";
+import { useState } from "react";
 
 const Option = ({ isMovieExists }) => {
   const { setWatchSetting, watchSetting } = useWatchSettingContext()
   const { setEpisode, MovieInfo } = useWatchContext()
   const { isUserLoggedIn } = useUserInfoContext()
+  const [copied, setCopied] = useState(false)
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {}
+  }
 
 
   return (
@@ -64,6 +74,11 @@ const Option = ({ isMovieExists }) => {
 
 
         {isUserLoggedIn && <AddToList movieInfo={MovieInfo} isMovieExists={isMovieExists} />}
+
+        <div className="flex items-center gap-2 cursor-pointer" onClick={handleShare}>
+          <span><FaShareNodes /></span>
+          <span className={copied ? "text-[var(--accent)]" : ""}>{copied ? "Copied!" : "Share"}</span>
+        </div>
       </div>
     </div>
   )

@@ -26,7 +26,7 @@ const Options = () => {
       ...(isAdult && { isAdult: String(isAdult) }),
     });
 
-    router.push(`/catalog${queryParams.toString() ? `?${queryParams}` : ""}`);
+    router.push(`/catalog/1${queryParams.toString() ? `?${queryParams}` : ""}`);
   }, [search, type, isAdult]);
 
 

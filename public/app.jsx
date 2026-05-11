@@ -759,6 +759,31 @@ const Tinf0ilTV = ({ theme }) => {
   const [status, setStatus] = useState('loading');
   const iframeRef = useRef(null);
 
+  // If the user navigated directly to a TV sub-path (e.g. /tv/sports),
+  // start the iframe there instead of always at /tv/
+  const [iframeSrc] = useState(() => {
+    const p = location.pathname;
+    return p.startsWith('/tv/') ? (p + location.search) : '/tv/';
+  });
+
+  const syncOuterUrl = () => {
+    try {
+      const iwin = iframeRef.current?.contentWindow;
+      if (!iwin) return;
+      const iframePath = iwin.location.pathname + iwin.location.search;
+      const outerPath = location.pathname + location.search;
+      if (outerPath !== iframePath) {
+        history.replaceState({ spa: true, page: 'tv' }, '', iframePath);
+      }
+    } catch {}
+  };
+
+  // Keep outer URL in sync with iframe navigation (client-side and server-side)
+  useEffect(() => {
+    const id = setInterval(syncOuterUrl, 300);
+    return () => clearInterval(id);
+  }, []);
+
   const injectAccent = () => {
     try {
       const doc = iframeRef.current?.contentDocument;
@@ -811,7 +836,7 @@ const Tinf0ilTV = ({ theme }) => {
           ref={iframeRef}
           className="tv-app-frame"
           title="tinf0il TV"
-          src="/tv/"
+          src={iframeSrc}
           allow="autoplay; fullscreen; picture-in-picture"
           referrerPolicy="no-referrer"
           onLoad={e => {
@@ -822,6 +847,7 @@ const Tinf0ilTV = ({ theme }) => {
               setStatus('ready');
             }
             injectAccent();
+            syncOuterUrl();
           }}
           onError={() => setStatus('error')}
         />

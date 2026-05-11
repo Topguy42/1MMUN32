@@ -1,5 +1,5 @@
 "use client";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import ReactPaginate from 'react-paginate';
@@ -7,6 +7,7 @@ import ReactPaginate from 'react-paginate';
 const Pagination = ({ pageInfo }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [page, setPage] = useState(pageInfo?.currentPage);
 
   useEffect(() => {
@@ -19,7 +20,7 @@ const Pagination = ({ pageInfo }) => {
       }
 
       const newQuery = updatedParams.toString();
-      const newUrl = `${window.location.pathname}${newQuery ? `?${newQuery}` : ""}`;
+      const newUrl = `${pathname}${newQuery ? `?${newQuery}` : ""}`;
       router.push(newUrl);
     };
 

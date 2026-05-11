@@ -9,28 +9,28 @@ import Options from "./Options";
 import { getTrendingMovies } from "@/lib/MoviesFunctions";
 
 
-const Movies = () => {
+const Movies = ({ initialPage = 1 }) => {
   const searchParams = useSearchParams();
 
-  // Initialize states from search parameters
   const [type, setType] = useState(searchParams.get("type") || "All");
   const [search, setSearch] = useState(searchParams.get("q") || "");
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
-  const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
+  const [page, setPage] = useState(initialPage);
   const [isAdult, setIsAdult] = useState(searchParams.get("isAdult") === "true");
 
-
-  // Update state when search parameters change
+  // Sync page when navigating via path (back/forward, direct URL)
   useEffect(() => {
-    const updatedPage = Number(searchParams.get("page")) || 1;
+    setPage(initialPage);
+  }, [initialPage]);
+
+  // Sync filters from search params (q, type, isAdult) — not page
+  useEffect(() => {
     const updatedIsAdult = searchParams.get("isAdult") === "true";
     const updatedSearch = searchParams.get("q") || "";
     const updatedType = searchParams.get("type") || "all";
 
-
-    setPage(updatedPage);
     setIsAdult(updatedIsAdult);
     setSearch(updatedSearch);
     setType(updatedType);
