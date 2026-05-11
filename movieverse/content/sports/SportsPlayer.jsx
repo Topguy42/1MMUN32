@@ -6,6 +6,7 @@ import { getNtvsEvents, buildEmbedUrls, formatEventDate } from "@/lib/ntvsApi"
 
 const SportsPlayer = ({ id }) => {
   const [event, setEvent] = useState(null)
+  const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
   const [sourceIndex, setSourceIndex] = useState(0)
   const [streamIndex, setStreamIndex] = useState(0)
@@ -23,9 +24,11 @@ const SportsPlayer = ({ id }) => {
     getNtvsEvents()
       .then(({ live, nonLive }) => {
         const all = [...live, ...nonLive]
-        setEvent(all.find(e => e.id === id) || null)
+        const found = all.find(e => String(e.id) === String(id))
+        setEvent(found || null)
+        if (!found) setError(`Event ID "${id}" not in API response (${all.length} events loaded)`)
       })
-      .catch(() => setEvent(null))
+      .catch(e => setError(e?.message || "Failed to load events"))
       .finally(() => setLoading(false))
   }, [id])
 
@@ -35,6 +38,7 @@ const SportsPlayer = ({ id }) => {
     <div className="flex flex-col items-center justify-center py-32 text-slate-500 gap-3">
       <span className="text-5xl">📡</span>
       <span className="text-lg font-medium">Event not found</span>
+      {error && <span className="text-xs text-slate-600 font-mono">{error}</span>}
       <Link href="/sports" className="text-sm hover:text-slate-300 transition-colors">← Back to Live Sports</Link>
     </div>
   )
