@@ -1,5 +1,16 @@
-export async function getNtvsEvents() {
+async function fetchNtvsData() {
   const target = "https://ntvs.cx/api/get-matches?server=kobra&type=both"
+
+  // Try direct browser fetch first (user's IP, not the server's — avoids cloud IP blocks)
+  try {
+    const res = await fetch(target, { headers: { Accept: "application/json" } })
+    if (res.ok) {
+      const data = await res.json()
+      if (data.success) return data
+    }
+  } catch {}
+
+  // Fallback: route through the server proxy
   const res = await fetch(`/api/tv-proxy?destination=${encodeURIComponent(target)}`, {
     headers: {
       "x-referer": "https://ntvs.cx/",
@@ -7,9 +18,14 @@ export async function getNtvsEvents() {
       accept: "application/json",
     },
   })
-  if (!res.ok) throw new Error("API error")
+  if (!res.ok) throw new Error(`proxy ${res.status}`)
   const data = await res.json()
   if (!data.success) throw new Error("API returned failure")
+  return data
+}
+
+export async function getNtvsEvents() {
+  const data = await fetchNtvsData()
 
   const liveIds = new Set((data.live || []).map(e => e.id))
   const all = data.all || []

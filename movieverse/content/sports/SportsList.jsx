@@ -64,7 +64,7 @@ const SportsList = () => {
   const [live, setLive] = useState([])
   const [nonLive, setNonLive] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+  const [error, setError] = useState(null)
   const [lastUpdated, setLastUpdated] = useState(null)
 
   const refresh = useCallback(async () => {
@@ -74,8 +74,8 @@ const SportsList = () => {
       setNonLive(data.nonLive)
       setLastUpdated(Date.now())
       setError(false)
-    } catch {
-      setError(true)
+    } catch (e) {
+      setError(e?.message || "unknown error")
     } finally {
       setLoading(false)
     }
@@ -97,6 +97,7 @@ const SportsList = () => {
     <div className="flex flex-col items-center justify-center py-32 text-slate-500 gap-3">
       <span className="text-5xl">⚠️</span>
       <span className="text-lg font-medium">Couldn't load events</span>
+      <span className="text-xs text-slate-600 font-mono">{error}</span>
       <button onClick={refresh} className="mt-2 px-4 py-2 bg-[#413d57] border border-[#5b5682] rounded-md text-sm text-slate-300 hover:bg-[#4a446c] transition-colors">
         Try again
       </button>
