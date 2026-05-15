@@ -55,6 +55,13 @@ const CLOAK_PRESETS = [
   { id: 'classroom', short: 'Classroom', title: 'Classroom', icon: 'https://ssl.gstatic.com/classroom/favicon.png', host: 'classroom.google.com' },
 ];
 
+const BROWSER_OPTIONS = [
+  { id: 'duckduckgo', name: 'DuckDuckGo', url: 'https://duckduckgo.com', icon: 'https://www.google.com/s2/favicons?domain=duckduckgo.com&sz=64' },
+  { id: 'google', name: 'Google', url: 'https://google.com', icon: 'https://www.google.com/s2/favicons?domain=google.com&sz=64' },
+  { id: 'bing', name: 'Bing', url: 'https://bing.com', icon: 'https://www.google.com/s2/favicons?domain=bing.com&sz=64' },
+  { id: 'startpage', name: 'StartPage', url: 'https://startpage.com', icon: 'https://www.google.com/s2/favicons?domain=startpage.com&sz=64' },
+];
+
 function readInitialCloak() {
   const title = localStorage.getItem('websiteTitle');
   const icon = localStorage.getItem('websiteIcon');
@@ -935,6 +942,7 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
   const [autoBlank, setAutoBlank] = useState(false);
   const [stealth, setStealth] = useState(true);
   const [antiGuardian, setAntiGuardian] = useState(() => localStorage.getItem('tinf0ilAntiGuardian') === 'true');
+  const [browser, setBrowser] = useState(() => localStorage.getItem('tinf0ilBrowser') || 'duckduckgo');
 
   // Anti-guardian effect
   useEffect(() => {
@@ -1126,6 +1134,38 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
                 onChange={e => { setPanicUrl(e.target.value); savePanic(panicKey, e.target.value); }}
                 placeholder="classroom.google.com"
               />
+            </div>
+          </div>
+
+          <div className="panel">
+            <span className="panel-tag">// browser</span>
+            <h3>default browser</h3>
+            <p className="h-sub">set your search engine.</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginTop: 8 }}>
+              {BROWSER_OPTIONS.map(b => (
+                <button
+                  key={b.id}
+                  type="button"
+                  className={cx('browser-pick', browser === b.id && 'on')}
+                  onClick={() => { setBrowser(b.id); localStorage.setItem('tinf0ilBrowser', b.id); }}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: 12,
+                    borderRadius: 7,
+                    border: `1px solid ${browser === b.id ? 'var(--accent)' : 'var(--line)'}`,
+                    background: 'var(--bg2)',
+                    cursor: 'pointer',
+                    transition: 'border-color 140ms',
+                    color: 'var(--text)',
+                  }}
+                >
+                  <img src={b.icon} alt="" style={{ width: 28, height: 28, borderRadius: 4 }} onError={e => { e.currentTarget.style.visibility = 'hidden'; }} />
+                  <span style={{ fontSize: 12, fontWeight: 500 }}>{b.name}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
