@@ -1298,7 +1298,9 @@ const Chatroom = () => {
   const [input, setInput] = useState('');
   const [username, setUsername] = useState(() => localStorage.getItem('1MMUN3ChatUsername') || '');
   const [isEditingName, setIsEditingName] = useState(!username);
+  const [showNameInput, setShowNameInput] = useState(false);
   const messagesEndRef = useRef(null);
+  const nameInputRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -1307,6 +1309,12 @@ const Chatroom = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    if (showNameInput && nameInputRef.current) {
+      nameInputRef.current.focus();
+    }
+  }, [showNameInput]);
 
   const saveMessages = (newMessages) => {
     localStorage.setItem('1MMUN3ChatMessages', JSON.stringify(newMessages));
@@ -1332,81 +1340,232 @@ const Chatroom = () => {
     if (name.trim()) {
       localStorage.setItem('1MMUN3ChatUsername', name.trim());
       setUsername(name.trim());
-      setIsEditingName(false);
+      setShowNameInput(false);
     }
   };
 
   const clearChat = () => {
-    if (confirm('Clear all messages?')) {
+    if (confirm('Clear all messages? This action cannot be undone.')) {
       saveMessages([]);
     }
   };
 
   return (
-    <div style={{ position: 'fixed', top: 53, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', background: '#0a0e27', color: '#fff', fontFamily: 'inherit' }}>
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.3)' }}>
-        <div style={{ fontSize: '14px', color: '#aaa' }}>
-          {messages.length} messages
+    <div style={{ position: 'fixed', top: 53, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', background: 'var(--bg)', color: 'var(--text)', fontFamily: 'Inter, sans-serif' }}>
+      {/* Header */}
+      <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)' }}>1MMUN3 Chatroom</div>
+            <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>{messages.length} {messages.length === 1 ? 'message' : 'messages'}</div>
+          </div>
         </div>
-        <button onClick={clearChat} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#aaa', padding: '6px 12px', cursor: 'pointer', borderRadius: '4px', fontSize: '12px' }} onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.2)'} onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}>
-          Clear
+        <button
+          onClick={clearChat}
+          style={{
+            background: 'transparent',
+            border: '1px solid var(--line)',
+            color: 'var(--muted)',
+            padding: '6px 12px',
+            cursor: 'pointer',
+            borderRadius: '6px',
+            fontSize: '12px',
+            fontWeight: '500',
+            transition: 'all 150ms ease',
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = 'var(--accent-dim)';
+            e.target.style.color = 'var(--accent)';
+            e.target.style.borderColor = 'rgba(255,255,255,0.2)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = 'transparent';
+            e.target.style.color = 'var(--muted)';
+            e.target.style.borderColor = 'var(--line)';
+          }}
+        >
+          Clear Chat
         </button>
       </div>
 
-      <div style={{ flex: 1, overflow: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* Messages Area */}
+      <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '12px', scrollBehavior: 'smooth' }}>
         {messages.length === 0 && (
-          <div style={{ textAlign: 'center', color: '#666', marginTop: 'auto', marginBottom: 'auto' }}>
-            <p>No messages yet. Start the conversation!</p>
+          <div style={{ textAlign: 'center', color: 'var(--muted)', marginTop: 'auto', marginBottom: 'auto' }}>
+            <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '8px' }}>No messages yet</div>
+            <div style={{ fontSize: '13px' }}>Be the first to start the conversation!</div>
           </div>
         )}
         {messages.map((msg) => (
-          <div key={msg.id} style={{ display: 'flex', gap: '8px', fontSize: '14px' }}>
-            <span style={{ color: '#0f0', fontWeight: '600', minWidth: '100px', wordBreak: 'break-word' }}>{msg.username}</span>
-            <div style={{ flex: 1 }}>
-              <span style={{ wordBreak: 'break-word' }}>{msg.text}</span>
-              <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>{msg.time}</div>
+          <div key={msg.id} style={{ display: 'flex', gap: '12px', fontSize: '14px', animation: 'fadeIn 0.2s ease' }}>
+            <div>
+              <div style={{ color: 'var(--accent)', fontWeight: '600', fontSize: '13px', marginBottom: '2px' }}>
+                {msg.username}
+              </div>
+              <div style={{ color: 'var(--muted)', fontSize: '11px' }}>
+                {msg.time}
+              </div>
+            </div>
+            <div style={{ flex: 1, paddingTop: '2px' }}>
+              <div style={{ color: 'var(--text)', wordBreak: 'break-word', lineHeight: '1.4', fontSize: '14px' }}>
+                {msg.text}
+              </div>
             </div>
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
 
-      <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)' }}>
-        {isEditingName ? (
-          <input
-            type="text"
-            placeholder="Enter your name..."
-            defaultValue={username}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') handleNameSave(e.target.value);
-            }}
-            onBlur={(e) => handleNameSave(e.target.value)}
-            autoFocus
-            style={{ width: '100%', padding: '8px 12px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '4px', fontSize: '14px', marginBottom: '8px', boxSizing: 'border-box' }}
-          />
-        ) : (
-          <div style={{ fontSize: '12px', color: '#0f0', marginBottom: '8px', cursor: 'pointer' }} onClick={() => setIsEditingName(true)}>
-            Chatting as: <strong>{username}</strong> (click to change)
-          </div>
-        )}
+      {/* Input Area */}
+      <div style={{ padding: '16px 24px', borderTop: '1px solid var(--line)', background: 'var(--bg2)' }}>
+        {/* Username Section */}
+        <div style={{ marginBottom: '12px' }}>
+          {showNameInput ? (
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                ref={nameInputRef}
+                type="text"
+                placeholder="Enter your username..."
+                defaultValue={username}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') handleNameSave(e.target.value);
+                }}
+                onBlur={(e) => handleNameSave(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  background: 'var(--bg)',
+                  border: '1px solid var(--line)',
+                  color: 'var(--text)',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontFamily: 'Inter, sans-serif',
+                  outline: 'none',
+                  transition: 'border-color 150ms ease',
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = 'var(--accent-dim)';
+                }}
+              />
+              <button
+                onClick={() => handleNameSave(nameInputRef.current?.value || '')}
+                style={{
+                  padding: '8px 16px',
+                  background: 'var(--accent-dim)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: 'var(--accent)',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 150ms ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'var(--accent)';
+                  e.target.style.color = '#000';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'var(--accent-dim)';
+                  e.target.style.color = 'var(--accent)';
+                }}
+              >
+                Save
+              </button>
+            </div>
+          ) : (
+            <div
+              onClick={() => setShowNameInput(true)}
+              style={{
+                fontSize: '12px',
+                color: 'var(--muted)',
+                padding: '8px 12px',
+                background: 'var(--bg)',
+                border: '1px solid var(--line)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'all 150ms ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--accent-dim)';
+                e.currentTarget.style.color = 'var(--accent)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--line)';
+                e.currentTarget.style.color = 'var(--muted)';
+              }}
+            >
+              {username ? <span>Chatting as <strong style={{ color: 'var(--accent)' }}>{username}</strong> • Click to change</span> : 'Set a username to chat'}
+            </div>
+          )}
+        </div>
+
+        {/* Message Input */}
         <form onSubmit={sendMessage} style={{ display: 'flex', gap: '8px' }}>
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={username ? 'Say something...' : 'Enter a name first...'}
+            placeholder={username ? 'Say something...' : 'Set a username first...'}
             disabled={!username}
-            style={{ flex: 1, padding: '8px 12px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box' }}
+            style={{
+              flex: 1,
+              padding: '10px 12px',
+              background: 'var(--bg)',
+              border: '1px solid var(--line)',
+              color: 'var(--text)',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontFamily: 'Inter, sans-serif',
+              outline: 'none',
+              transition: 'border-color 150ms ease',
+              opacity: username ? 1 : 0.5,
+            }}
+            onFocus={(e) => {
+              if (username) e.target.style.borderColor = 'var(--accent-dim)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = 'var(--line)';
+            }}
           />
           <button
             type="submit"
             disabled={!input.trim() || !username}
-            style={{ padding: '8px 16px', background: input.trim() && username ? '#0f0' : 'rgba(0,255,0,0.3)', border: 'none', color: input.trim() && username ? '#000' : '#999', borderRadius: '4px', cursor: input.trim() && username ? 'pointer' : 'not-allowed', fontSize: '14px', fontWeight: '600' }}
+            style={{
+              padding: '10px 20px',
+              background: input.trim() && username ? 'var(--accent-dim)' : 'transparent',
+              border: '1px solid var(--line)',
+              color: input.trim() && username ? 'var(--accent)' : 'var(--muted)',
+              borderRadius: '6px',
+              cursor: input.trim() && username ? 'pointer' : 'not-allowed',
+              fontSize: '13px',
+              fontWeight: '600',
+              transition: 'all 150ms ease',
+              fontFamily: 'Inter, sans-serif',
+            }}
+            onMouseEnter={(e) => {
+              if (input.trim() && username) {
+                e.target.style.background = 'var(--accent)';
+                e.target.style.color = 'var(--bg)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (input.trim() && username) {
+                e.target.style.background = 'var(--accent-dim)';
+                e.target.style.color = 'var(--accent)';
+              }
+            }}
           >
             Send
           </button>
         </form>
       </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 };
