@@ -1,5 +1,16 @@
 (function () {
-  const searchTemplate = "https://www.google.com/search?q=%s";
+  const searchEngines = {
+    duckduckgo: "https://duckduckgo.com/?q=%s",
+    google: "https://www.google.com/search?q=%s",
+    bing: "https://www.bing.com/search?q=%s",
+    startpage: "https://www.startpage.com/sp/search?query=%s",
+  };
+
+  function getSearchTemplate() {
+    const browser = localStorage.getItem('tinf0ilBrowser') || 'duckduckgo';
+    return searchEngines[browser] || searchEngines.duckduckgo;
+  }
+
   const fallbackImage = "/addicon.png";
 
   function $(selector, root = document) {
@@ -21,10 +32,12 @@
         const url = new URL(`https://${value}`);
         if (url.hostname.includes(".")) return url.toString();
       } catch {
+        const searchTemplate = getSearchTemplate();
         return searchTemplate.replace("%s", encodeURIComponent(value));
       }
     }
 
+    const searchTemplate = getSearchTemplate();
     return searchTemplate.replace("%s", encodeURIComponent(value));
   }
 
