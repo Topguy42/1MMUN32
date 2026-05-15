@@ -8,7 +8,7 @@
 			bing: "https://www.bing.com/search?q=%s",
 			startpage: "https://www.startpage.com/sp/search?query=%s",
 		};
-		const browser = localStorage.getItem('tinf0ilBrowser') || 'duckduckgo';
+		const browser = localStorage.getItem('1MMUN3Browser') || 'duckduckgo';
 		return searchEngines[browser] || searchEngines.duckduckgo;
 	}
 
@@ -108,7 +108,7 @@
 		return initPromise;
 	}
 
-	window.Tinf0ilProxy = {
+	window.OneMMUN3Proxy = {
 		async encode(url) {
 			return url;
 		},
@@ -137,13 +137,13 @@
 		},
 	};
 
-	window.Tinf0il = window.Tinf0il || {};
-	window.Tinf0il.normalizeUrl = normalizeUrl;
-	window.Tinf0il.openBlank = function (url) {
+	window.OneMMUN3 = window.OneMMUN3 || {};
+	window.OneMMUN3.normalizeUrl = normalizeUrl;
+	window.OneMMUN3.openBlank = function (url) {
 		url = url || location.href;
 		const tab = window.open("about:blank", "_blank");
 		if (!tab) return;
-		tab.document.title = document.title || "Tinf0il";
+		tab.document.title = document.title || "1MMUN3";
 		const iframe = tab.document.createElement("iframe");
 		Object.assign(iframe.style, {
 			border: "0",
@@ -156,19 +156,19 @@
 		tab.document.body.style.margin = "0";
 		tab.document.body.appendChild(iframe);
 	};
-	window.Tinf0il.resetProxy = function () {
-		window.Tinf0ilProxy.reset();
+	window.OneMMUN3.resetProxy = function () {
+		window.OneMMUN3Proxy.reset();
 	};
 
 	(function initPanicKey() {
 		let lastPress = 0;
 		document.addEventListener("keydown", (e) => {
-			const key = localStorage.getItem("tinf0ilPanicKey") || "Escape";
+			const key = localStorage.getItem("1MMUN3PanicKey") || "Escape";
 			if (e.key !== key) return;
 			const now = Date.now();
 			if (now - lastPress < 500) {
 				e.preventDefault();
-				const raw = localStorage.getItem("tinf0ilPanicUrl") ||
+				const raw = localStorage.getItem("1MMUN3PanicUrl") ||
 					localStorage.getItem("websiteCloakHost") ||
 					"classroom.google.com";
 				const href = /^https?:\/\//i.test(raw) ? raw : "https://" + raw;
