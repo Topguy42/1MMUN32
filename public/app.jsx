@@ -319,7 +319,7 @@ const AuthModal = ({ onClose }) => {
       <div className="modal auth-modal" onClick={e => e.stopPropagation()}>
         <div className="modal-head">
           <div className="modal-meta">
-            <div className="kind">tinf0il</div>
+            <div className="kind">1MMUN3</div>
             <h3>{mode === 'login' ? 'sign in' : 'create account'}</h3>
           </div>
         </div>
@@ -364,7 +364,7 @@ const TopBar = ({ page, navigate, user, onAccountClick }) => {
       <div className="shell topbar-inner">
         <a href="/" className="brand" onClick={e => { e.preventDefault(); navigate('home'); }}>
           <img src="/assets/foil.png" alt="" className="brand-logo" />
-          <span>tinf<em>0</em>il</span>
+          <span>1<em>MMUN</em>3</span>
         </a>
         <nav className="nav-pill">
           {pages.map(p => (
@@ -395,7 +395,7 @@ const TopBar = ({ page, navigate, user, onAccountClick }) => {
 const Footer = () => (
   <footer className="footer">
     <div className="shell footer-inner">
-      <span className="small">tinf0il · aluminum depot</span>
+      <span className="small">1MMUN3 · protection shield</span>
       <span className="small">no logs. no leaks.</span>
       <a className="small" href="https://github.com/Aluminum-Depot" target="_blank" rel="noopener noreferrer">github ↗</a>
     </div>
@@ -810,7 +810,7 @@ const Tinf0ilTV = ({ theme }) => {
         <div className="tv-loading">
           <div className="tv-loading-inner">
             <img src="/assets/foil.png" alt="" className="tv-loading-logo" />
-            <span className="tv-loading-label">tinf<em>0</em>il TV</span>
+            <span className="tv-loading-label">1<em>MMUN</em>3 TV</span>
             <div className="tv-loading-bar"><div className="tv-loading-fill" /></div>
             <p className="tv-loading-notice">⚠ Streaming players may open popup ads upon clicking Close them and playback continues normally</p>
           </div>
@@ -820,7 +820,7 @@ const Tinf0ilTV = ({ theme }) => {
         <div className="tv-loading">
           <div className="tv-loading-inner">
             <img src="/assets/foil.png" alt="" className="tv-loading-logo" />
-            <span className="tv-loading-label">tinf<em>0</em>il TV</span>
+            <span className="tv-loading-label">1<em>MMUN</em>3 TV</span>
             <p className="tv-err">TV app isn't running — start the server then refresh.</p>
           </div>
         </div>
@@ -1185,7 +1185,7 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
 const About = () => (
   <main>
     <section className="shell page-hero">
-      <h1>tinf<em>0</em>il</h1>
+      <h1>1<em>MMUN</em>3</h1>
       <p className="lede">a lightweight proxy portal. browse, play, work. privately.</p>
     </section>
 

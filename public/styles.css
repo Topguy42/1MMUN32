@@ -1,43 +1,43 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;1,300&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --bg: #0c0c0f;
-  --bg2: #111116;
-  --bg3: #16161d;
-  --line: rgba(255,255,255,0.07);
-  --text: #d4d4dc;
-  --muted: #5c5c6e;
-  --dim: #38383f;
-  --accent: #7eb8a4;
-  --accent-dim: rgba(126, 184, 164, 0.15);
+  --bg: #000000;
+  --bg2: #0a0a0a;
+  --bg3: #141414;
+  --line: rgba(255,255,255,0.1);
+  --text: #ffffff;
+  --muted: #888888;
+  --dim: #444444;
+  --accent: #ffffff;
+  --accent-dim: rgba(255, 255, 255, 0.15);
 }
 
 [data-theme="daylight"] {
-  --bg: #f0ede8;
-  --bg2: #e8e4de;
-  --bg3: #dedad3;
-  --line: rgba(0,0,0,0.08);
-  --text: #1a1a20;
-  --muted: #7a7a8a;
-  --dim: #b0b0bc;
-  --accent: #4a8a74;
-  --accent-dim: rgba(74, 138, 116, 0.12);
+  --bg: #ffffff;
+  --bg2: #f5f5f5;
+  --bg3: #eeeeee;
+  --line: rgba(0,0,0,0.1);
+  --text: #000000;
+  --muted: #666666;
+  --dim: #cccccc;
+  --accent: #000000;
+  --accent-dim: rgba(0, 0, 0, 0.12);
 }
 
 [data-theme="midnight"] {
-  --bg: #07090d;
-  --bg2: #0c1015;
-  --bg3: #11161e;
-  --accent: #69b4cc;
-  --accent-dim: rgba(105, 180, 204, 0.12);
+  --bg: #000000;
+  --bg2: #0a0a0a;
+  --bg3: #141414;
+  --accent: #ffffff;
+  --accent-dim: rgba(255, 255, 255, 0.15);
 }
 
 [data-theme="bubblegum"] {
-  --bg: #120910;
-  --bg2: #190d17;
-  --bg3: #20121e;
-  --accent: #c47aaa;
-  --accent-dim: rgba(196, 122, 170, 0.12);
+  --bg: #000000;
+  --bg2: #0a0a0a;
+  --bg3: #141414;
+  --accent: #ffffff;
+  --accent-dim: rgba(255, 255, 255, 0.15);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
