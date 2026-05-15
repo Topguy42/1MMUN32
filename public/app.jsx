@@ -372,9 +372,6 @@ const TopBar = ({ page, navigate, user, onAccountClick }) => {
           ))}
         </nav>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginLeft: 'auto' }}>
-        <a className="status-chip" href="https://discord.gg/rYWBs6Hezs" target="_blank" rel="noopener noreferrer">
-          get more links ↗
-        </a>
         <button className="account-btn" onClick={onAccountClick}>
           {user ? (
             <>
@@ -397,7 +394,6 @@ const Footer = () => (
     <div className="shell footer-inner">
       <span className="small">1MMUN3 · protection shield</span>
       <span className="small">no logs. no leaks.</span>
-      <a className="small" href="https://github.com/Aluminum-Depot" target="_blank" rel="noopener noreferrer">github ↗</a>
     </div>
   </footer>
 );
@@ -439,9 +435,6 @@ const Home = ({ navigate, voice }) => {
         <div className="hero-actions">
           <button className="btn" onClick={() => navigate('settings')}>tab cloak</button>
           <button className="btn" onClick={() => window.Tinf0il?.openBlank()}>about:blank</button>
-<a className="btn discord-btn" href="https://discord.gg/rYWBs6Hezs" target="_blank" rel="noopener noreferrer" data-tooltip="windows exploits · school unblocking · web proxy community">
-            join the discord ↗
-          </a>
         </div>
 
         {status && (
@@ -941,6 +934,35 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
 
   const [autoBlank, setAutoBlank] = useState(false);
   const [stealth, setStealth] = useState(true);
+  const [antiGuardian, setAntiGuardian] = useState(() => localStorage.getItem('tinf0ilAntiGuardian') === 'true');
+
+  // Anti-guardian effect
+  useEffect(() => {
+    if (!antiGuardian) return;
+
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = 'save your work?';
+      return 'save your work?';
+    };
+
+    const handleScreenCapture = () => {
+      try {
+        if (document.hidden) {
+          document.body.style.display = 'none';
+          setTimeout(() => { document.body.style.display = ''; }, 100);
+        }
+      } catch (err) {}
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleScreenCapture);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleScreenCapture);
+    };
+  }, [antiGuardian]);
 
   const [panicKey, setPanicKey] = useState(() => localStorage.getItem('tinf0ilPanicKey') || 'Escape');
   const [panicUrl, setPanicUrl] = useState(() => localStorage.getItem('tinf0ilPanicUrl') || '');
@@ -953,15 +975,17 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
   };
 
   const themes = [
-    { id: 'midnight', name: 'midnight', pal: ['#07090d', '#69b4cc', '#334'] },
-    { id: 'daylight', name: 'daylight', pal: ['#f0ede8', '#4a8a74', '#ccc'] },
-    { id: 'acid',     name: 'acid',     pal: ['#0c0c0f', '#7eb8a4', '#1a2'] },
-    { id: 'bubblegum',name: 'bubblegum',pal: ['#120910', '#c47aaa', '#412'] },
+    { id: 'midnight', name: 'midnight', pal: ['#000000', '#ffffff', '#0a0a0a'] },
+    { id: 'daylight', name: 'daylight', pal: ['#ffffff', '#000000', '#f5f5f5'] },
+    { id: 'bubblegum',name: 'bubblegum',pal: ['#1a0a15', '#c47aaa', '#2d1227'] },
+    { id: 'ocean',    name: 'ocean',    pal: ['#0a1929', '#29b6f6', '#132f4c'] },
+    { id: 'forest',   name: 'forest',   pal: ['#0b3d1a', '#4caf50', '#1b5e2c'] },
   ];
 
   const toggles = [
     { key: 'autoBlank', val: autoBlank, set: setAutoBlank, label: 'auto about:blank', sub: 'open everything in a cloak window by default.' },
     { key: 'stealth',   val: stealth,   set: setStealth,   label: 'stealth route',    sub: 'strip referrers and telemetry on every jump.' },
+    { key: 'antiGuardian', val: antiGuardian, set: (v) => { setAntiGuardian(v); localStorage.setItem('tinf0ilAntiGuardian', v); }, label: 'anti-guardian', sub: 'prevent your teacher from closing this tab.' },
     { key: 'reduce',    val: reduce,    set: setReduce,    label: 'reduce motion',     sub: 'turn off background animations.' },
     { key: 'bigText',   val: bigText,   set: setBigText,   label: 'larger text',      sub: 'bumps up font sizes a notch.' },
   ];
@@ -1306,7 +1330,7 @@ const SPLASHES = [
 const VOICE_PRESETS = {
   punchy: {
     headline: null,
-    lede: 'paste a link and go. tinf0il routes it, you get there.',
+    lede: 'paste a link and go. 1MMun3 routes it, you get there.',
   },
   chill: {
     headline: <>browse privately. <em>that's it.</em></>,
@@ -1353,6 +1377,35 @@ const App = () => {
     if (v) document.documentElement.setAttribute('data-big-text', '');
     else document.documentElement.removeAttribute('data-big-text');
   };
+
+  // ── anti-guardian (app-level) ──
+  useEffect(() => {
+    const antiGuardian = localStorage.getItem('tinf0ilAntiGuardian') === 'true';
+    if (!antiGuardian) return;
+
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = 'save your work?';
+      return 'save your work?';
+    };
+
+    const handleVisibilityChange = () => {
+      try {
+        if (document.hidden) {
+          document.body.style.display = 'none';
+          setTimeout(() => { if (document.hidden) document.body.style.display = ''; }, 100);
+        }
+      } catch (err) {}
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   // ── auth ──
   const [user, setUser] = useState(null);

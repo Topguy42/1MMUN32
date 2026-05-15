@@ -33,11 +33,39 @@
 }
 
 [data-theme="bubblegum"] {
-  --bg: #000000;
-  --bg2: #0a0a0a;
-  --bg3: #141414;
-  --accent: #ffffff;
-  --accent-dim: rgba(255, 255, 255, 0.15);
+  --bg: #1a0a15;
+  --bg2: #2d1227;
+  --bg3: #3d1533;
+  --line: rgba(196, 122, 170, 0.15);
+  --text: #f0e6f0;
+  --muted: #a876a8;
+  --dim: #6b3a68;
+  --accent: #c47aaa;
+  --accent-dim: rgba(196, 122, 170, 0.15);
+}
+
+[data-theme="ocean"] {
+  --bg: #0a1929;
+  --bg2: #132f4c;
+  --bg3: #1a4d6d;
+  --line: rgba(41, 182, 246, 0.15);
+  --text: #e1f5fe;
+  --muted: #4dd0e1;
+  --dim: #0288d1;
+  --accent: #29b6f6;
+  --accent-dim: rgba(41, 182, 246, 0.15);
+}
+
+[data-theme="forest"] {
+  --bg: #0b3d1a;
+  --bg2: #1b5e2c;
+  --bg3: #2a7d3d;
+  --line: rgba(76, 175, 80, 0.15);
+  --text: #c8e6c9;
+  --muted: #66bb6a;
+  --dim: #388e3c;
+  --accent: #4caf50;
+  --accent-dim: rgba(76, 175, 80, 0.15);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
