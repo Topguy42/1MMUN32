@@ -55,6 +55,13 @@ const CLOAK_PRESETS = [
   { id: 'classroom', short: 'Classroom', title: 'Classroom', icon: 'https://ssl.gstatic.com/classroom/favicon.png', host: 'classroom.google.com' },
 ];
 
+const BROWSER_OPTIONS = [
+  { id: 'duckduckgo', name: 'DuckDuckGo', url: 'https://duckduckgo.com', icon: 'https://www.google.com/s2/favicons?domain=duckduckgo.com&sz=64' },
+  { id: 'google', name: 'Google', url: 'https://google.com', icon: 'https://www.google.com/s2/favicons?domain=google.com&sz=64' },
+  { id: 'bing', name: 'Bing', url: 'https://bing.com', icon: 'https://www.google.com/s2/favicons?domain=bing.com&sz=64' },
+  { id: 'startpage', name: 'StartPage', url: 'https://startpage.com', icon: 'https://www.google.com/s2/favicons?domain=startpage.com&sz=64' },
+];
+
 function readInitialCloak() {
   const title = localStorage.getItem('websiteTitle');
   const icon = localStorage.getItem('websiteIcon');
@@ -372,9 +379,6 @@ const TopBar = ({ page, navigate, user, onAccountClick }) => {
           ))}
         </nav>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginLeft: 'auto' }}>
-        <a className="status-chip" href="https://discord.gg/rYWBs6Hezs" target="_blank" rel="noopener noreferrer">
-          get more links ↗
-        </a>
         <button className="account-btn" onClick={onAccountClick}>
           {user ? (
             <>
@@ -397,7 +401,6 @@ const Footer = () => (
     <div className="shell footer-inner">
       <span className="small">1MMUN3 · protection shield</span>
       <span className="small">no logs. no leaks.</span>
-      <a className="small" href="https://github.com/Aluminum-Depot" target="_blank" rel="noopener noreferrer">github ↗</a>
     </div>
   </footer>
 );
@@ -439,9 +442,6 @@ const Home = ({ navigate, voice }) => {
         <div className="hero-actions">
           <button className="btn" onClick={() => navigate('settings')}>tab cloak</button>
           <button className="btn" onClick={() => window.Tinf0il?.openBlank()}>about:blank</button>
-<a className="btn discord-btn" href="https://discord.gg/rYWBs6Hezs" target="_blank" rel="noopener noreferrer" data-tooltip="windows exploits · school unblocking · web proxy community">
-            join the discord ↗
-          </a>
         </div>
 
         {status && (
@@ -941,6 +941,36 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
 
   const [autoBlank, setAutoBlank] = useState(false);
   const [stealth, setStealth] = useState(true);
+  const [antiGuardian, setAntiGuardian] = useState(() => localStorage.getItem('tinf0ilAntiGuardian') === 'true');
+  const [browser, setBrowser] = useState(() => localStorage.getItem('tinf0ilBrowser') || 'duckduckgo');
+
+  // Anti-guardian effect
+  useEffect(() => {
+    if (!antiGuardian) return;
+
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = 'save your work?';
+      return 'save your work?';
+    };
+
+    const handleScreenCapture = () => {
+      try {
+        if (document.hidden) {
+          document.body.style.display = 'none';
+          setTimeout(() => { document.body.style.display = ''; }, 100);
+        }
+      } catch (err) {}
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleScreenCapture);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleScreenCapture);
+    };
+  }, [antiGuardian]);
 
   const [panicKey, setPanicKey] = useState(() => localStorage.getItem('tinf0ilPanicKey') || 'Escape');
   const [panicUrl, setPanicUrl] = useState(() => localStorage.getItem('tinf0ilPanicUrl') || '');
@@ -953,15 +983,17 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
   };
 
   const themes = [
-    { id: 'midnight', name: 'midnight', pal: ['#07090d', '#69b4cc', '#334'] },
-    { id: 'daylight', name: 'daylight', pal: ['#f0ede8', '#4a8a74', '#ccc'] },
-    { id: 'acid',     name: 'acid',     pal: ['#0c0c0f', '#7eb8a4', '#1a2'] },
-    { id: 'bubblegum',name: 'bubblegum',pal: ['#120910', '#c47aaa', '#412'] },
+    { id: 'midnight', name: 'midnight', pal: ['#000000', '#ffffff', '#0a0a0a'] },
+    { id: 'daylight', name: 'daylight', pal: ['#ffffff', '#000000', '#f5f5f5'] },
+    { id: 'bubblegum',name: 'bubblegum',pal: ['#1a0a15', '#c47aaa', '#2d1227'] },
+    { id: 'ocean',    name: 'ocean',    pal: ['#0a1929', '#29b6f6', '#132f4c'] },
+    { id: 'forest',   name: 'forest',   pal: ['#0b3d1a', '#4caf50', '#1b5e2c'] },
   ];
 
   const toggles = [
     { key: 'autoBlank', val: autoBlank, set: setAutoBlank, label: 'auto about:blank', sub: 'open everything in a cloak window by default.' },
     { key: 'stealth',   val: stealth,   set: setStealth,   label: 'stealth route',    sub: 'strip referrers and telemetry on every jump.' },
+    { key: 'antiGuardian', val: antiGuardian, set: (v) => { setAntiGuardian(v); localStorage.setItem('tinf0ilAntiGuardian', v); }, label: 'anti-guardian', sub: 'prevent your teacher from closing this tab.' },
     { key: 'reduce',    val: reduce,    set: setReduce,    label: 'reduce motion',     sub: 'turn off background animations.' },
     { key: 'bigText',   val: bigText,   set: setBigText,   label: 'larger text',      sub: 'bumps up font sizes a notch.' },
   ];
@@ -1102,6 +1134,38 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
                 onChange={e => { setPanicUrl(e.target.value); savePanic(panicKey, e.target.value); }}
                 placeholder="classroom.google.com"
               />
+            </div>
+          </div>
+
+          <div className="panel">
+            <span className="panel-tag">// browser</span>
+            <h3>default browser</h3>
+            <p className="h-sub">set your search engine.</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginTop: 8 }}>
+              {BROWSER_OPTIONS.map(b => (
+                <button
+                  key={b.id}
+                  type="button"
+                  className={cx('browser-pick', browser === b.id && 'on')}
+                  onClick={() => { setBrowser(b.id); localStorage.setItem('tinf0ilBrowser', b.id); }}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: 12,
+                    borderRadius: 7,
+                    border: `1px solid ${browser === b.id ? 'var(--accent)' : 'var(--line)'}`,
+                    background: 'var(--bg2)',
+                    cursor: 'pointer',
+                    transition: 'border-color 140ms',
+                    color: 'var(--text)',
+                  }}
+                >
+                  <img src={b.icon} alt="" style={{ width: 28, height: 28, borderRadius: 4 }} onError={e => { e.currentTarget.style.visibility = 'hidden'; }} />
+                  <span style={{ fontSize: 12, fontWeight: 500 }}>{b.name}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -1306,7 +1370,7 @@ const SPLASHES = [
 const VOICE_PRESETS = {
   punchy: {
     headline: null,
-    lede: 'paste a link and go. tinf0il routes it, you get there.',
+    lede: 'paste a link and go. 1MMun3 routes it, you get there.',
   },
   chill: {
     headline: <>browse privately. <em>that's it.</em></>,
@@ -1353,6 +1417,35 @@ const App = () => {
     if (v) document.documentElement.setAttribute('data-big-text', '');
     else document.documentElement.removeAttribute('data-big-text');
   };
+
+  // ── anti-guardian (app-level) ──
+  useEffect(() => {
+    const antiGuardian = localStorage.getItem('tinf0ilAntiGuardian') === 'true';
+    if (!antiGuardian) return;
+
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = 'save your work?';
+      return 'save your work?';
+    };
+
+    const handleVisibilityChange = () => {
+      try {
+        if (document.hidden) {
+          document.body.style.display = 'none';
+          setTimeout(() => { if (document.hidden) document.body.style.display = ''; }, 100);
+        }
+      } catch (err) {}
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   // ── auth ──
   const [user, setUser] = useState(null);

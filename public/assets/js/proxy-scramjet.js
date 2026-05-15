@@ -1,6 +1,17 @@
 (function () {
 	const FRAME = Symbol.for("controller frame handle");
 
+	function getSearchTemplate() {
+		const searchEngines = {
+			duckduckgo: "https://duckduckgo.com/?q=%s",
+			google: "https://www.google.com/search?q=%s",
+			bing: "https://www.bing.com/search?q=%s",
+			startpage: "https://www.startpage.com/sp/search?query=%s",
+		};
+		const browser = localStorage.getItem('tinf0ilBrowser') || 'duckduckgo';
+		return searchEngines[browser] || searchEngines.duckduckgo;
+	}
+
 	function normalizeUrl(value) {
 		const v = (value || "").trim();
 		if (!v) return "";
@@ -15,7 +26,8 @@
 		} catch {
 			/* ignore */
 		}
-		return "https://www.google.com/search?q=" + encodeURIComponent(v);
+		const searchTemplate = getSearchTemplate();
+		return searchTemplate.replace("%s", encodeURIComponent(v));
 	}
 
 	function loadScript(url) {
