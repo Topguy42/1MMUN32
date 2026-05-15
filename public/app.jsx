@@ -1287,18 +1287,126 @@ const About = () => (
   </main>
 );
 
-const WIDGETBOT_SERVER = '1065018473459228783';
-const WIDGETBOT_CHANNEL = '1095365023414616255';
-
 const Chatroom = () => {
+  const [messages, setMessages] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('1MMUN3ChatMessages') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const [input, setInput] = useState('');
+  const [username, setUsername] = useState(() => localStorage.getItem('1MMUN3ChatUsername') || '');
+  const [isEditingName, setIsEditingName] = useState(!username);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const saveMessages = (newMessages) => {
+    localStorage.setItem('1MMUN3ChatMessages', JSON.stringify(newMessages));
+    setMessages(newMessages);
+  };
+
+  const sendMessage = (e) => {
+    e.preventDefault();
+    if (!input.trim() || !username.trim()) return;
+
+    const newMessage = {
+      id: Date.now(),
+      username: username.trim(),
+      text: input.trim(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    saveMessages([...messages, newMessage]);
+    setInput('');
+  };
+
+  const handleNameSave = (name) => {
+    if (name.trim()) {
+      localStorage.setItem('1MMUN3ChatUsername', name.trim());
+      setUsername(name.trim());
+      setIsEditingName(false);
+    }
+  };
+
+  const clearChat = () => {
+    if (confirm('Clear all messages?')) {
+      saveMessages([]);
+    }
+  };
+
   return (
-    <div style={{ position: 'fixed', top: 53, left: 0, right: 0, bottom: 0 }}>
-      <iframe
-        src={`https://e.widgetbot.io/channels/${WIDGETBOT_SERVER}/${WIDGETBOT_CHANNEL}`}
-        title="1MMUN3 chatroom"
-        allow="clipboard-write; fullscreen"
-        style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-      />
+    <div style={{ position: 'fixed', top: 53, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', background: '#0a0e27', color: '#fff', fontFamily: 'inherit' }}>
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.3)' }}>
+        <div style={{ fontSize: '14px', color: '#aaa' }}>
+          {messages.length} messages
+        </div>
+        <button onClick={clearChat} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#aaa', padding: '6px 12px', cursor: 'pointer', borderRadius: '4px', fontSize: '12px' }} onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.2)'} onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}>
+          Clear
+        </button>
+      </div>
+
+      <div style={{ flex: 1, overflow: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {messages.length === 0 && (
+          <div style={{ textAlign: 'center', color: '#666', marginTop: 'auto', marginBottom: 'auto' }}>
+            <p>No messages yet. Start the conversation!</p>
+          </div>
+        )}
+        {messages.map((msg) => (
+          <div key={msg.id} style={{ display: 'flex', gap: '8px', fontSize: '14px' }}>
+            <span style={{ color: '#0f0', fontWeight: '600', minWidth: '100px', wordBreak: 'break-word' }}>{msg.username}</span>
+            <div style={{ flex: 1 }}>
+              <span style={{ wordBreak: 'break-word' }}>{msg.text}</span>
+              <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>{msg.time}</div>
+            </div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)' }}>
+        {isEditingName ? (
+          <input
+            type="text"
+            placeholder="Enter your name..."
+            defaultValue={username}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') handleNameSave(e.target.value);
+            }}
+            onBlur={(e) => handleNameSave(e.target.value)}
+            autoFocus
+            style={{ width: '100%', padding: '8px 12px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '4px', fontSize: '14px', marginBottom: '8px', boxSizing: 'border-box' }}
+          />
+        ) : (
+          <div style={{ fontSize: '12px', color: '#0f0', marginBottom: '8px', cursor: 'pointer' }} onClick={() => setIsEditingName(true)}>
+            Chatting as: <strong>{username}</strong> (click to change)
+          </div>
+        )}
+        <form onSubmit={sendMessage} style={{ display: 'flex', gap: '8px' }}>
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={username ? 'Say something...' : 'Enter a name first...'}
+            disabled={!username}
+            style={{ flex: 1, padding: '8px 12px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box' }}
+          />
+          <button
+            type="submit"
+            disabled={!input.trim() || !username}
+            style={{ padding: '8px 16px', background: input.trim() && username ? '#0f0' : 'rgba(0,255,0,0.3)', border: 'none', color: input.trim() && username ? '#000' : '#999', borderRadius: '4px', cursor: input.trim() && username ? 'pointer' : 'not-allowed', fontSize: '14px', fontWeight: '600' }}
+          >
+            Send
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
