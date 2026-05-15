@@ -413,10 +413,10 @@ const Home = ({ navigate, voice }) => {
   const launch = async e => {
     e?.preventDefault();
     if (!query.trim()) { setStatus({ msg: 'paste something first', warn: true }); return; }
-    const url = window.Tinf0il?.normalizeUrl(query.trim());
+    const url = window.OneMMUN3?.normalizeUrl(query.trim());
     setStatus({ msg: 'starting proxy...' });
     try {
-      await window.Tinf0ilProxy.open(url);
+      await window.OneMMUN3Proxy.open(url);
     } catch (err) {
       setStatus({ msg: err.message || 'proxy failed.', warn: true });
     }
@@ -441,7 +441,7 @@ const Home = ({ navigate, voice }) => {
 
         <div className="hero-actions">
           <button className="btn" onClick={() => navigate('settings')}>tab cloak</button>
-          <button className="btn" onClick={() => window.Tinf0il?.openBlank()}>about:blank</button>
+          <button className="btn" onClick={() => window.OneMMUN3?.openBlank()}>about:blank</button>
         </div>
 
         {status && (
@@ -468,13 +468,13 @@ const Proxy = ({ navigate }) => {
   const launch = async e => {
     e?.preventDefault();
     if (!query.trim()) return;
-    const url = window.Tinf0il?.normalizeUrl(query.trim());
+    const url = window.OneMMUN3?.normalizeUrl(query.trim());
     const display = query.replace(/^https?:\/\//, '').slice(0, 40);
     setHistory(h => [{ url: display, t: 'just now' }, ...h.slice(0, 4)]);
     setStatus(`routing → ${display}...`);
     setQuery('');
     try {
-      await window.Tinf0ilProxy.open(url);
+      await window.OneMMUN3Proxy.open(url);
     } catch (err) {
       setStatus(err.message || 'proxy failed.');
     }
@@ -501,7 +501,7 @@ const Proxy = ({ navigate }) => {
         {status && <div className="status-line ok">{status}</div>}
 
         <div className="hero-actions" style={{ justifyContent: 'flex-start' }}>
-          <button className="btn" onClick={() => window.Tinf0il?.openBlank()}>about:blank</button>
+          <button className="btn" onClick={() => window.OneMMUN3?.openBlank()}>about:blank</button>
           <button className="btn" onClick={() => navigate('settings')}>settings</button>
         </div>
 
@@ -755,7 +755,7 @@ const LaunchModal = ({ item, onClose }) => {
   );
 };
 
-const Tinf0ilTV = ({ theme }) => {
+const OneMMUN3TV = ({ theme }) => {
   const [status, setStatus] = useState('loading');
   const iframeRef = useRef(null);
 
@@ -789,10 +789,10 @@ const Tinf0ilTV = ({ theme }) => {
       const doc = iframeRef.current?.contentDocument;
       if (!doc) return;
       const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
-      let style = doc.getElementById('tinf0il-accent');
+      let style = doc.getElementById('1mmun3-accent');
       if (!style) {
         style = doc.createElement('style');
-        style.id = 'tinf0il-accent';
+        style.id = '1mmun3-accent';
         doc.head.appendChild(style);
       }
       style.textContent = `:root { --accent: ${accent}; }`;
@@ -827,7 +827,7 @@ const Tinf0ilTV = ({ theme }) => {
       )}
       <section
         className="tv-app-frame-wrap"
-        aria-label="tinf0il TV"
+        aria-label="1MMUN3 TV"
         style={{ visibility: status === 'ready' ? 'visible' : 'hidden' }}
         onMouseEnter={enterFrame}
         onMouseLeave={leaveFrame}
@@ -835,7 +835,7 @@ const Tinf0ilTV = ({ theme }) => {
         <iframe
           ref={iframeRef}
           className="tv-app-frame"
-          title="tinf0il TV"
+          title="1MMUN3 TV"
           src={iframeSrc}
           allow="autoplay; fullscreen; picture-in-picture"
           referrerPolicy="no-referrer"
@@ -941,8 +941,8 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
 
   const [autoBlank, setAutoBlank] = useState(false);
   const [stealth, setStealth] = useState(true);
-  const [antiGuardian, setAntiGuardian] = useState(() => localStorage.getItem('tinf0ilAntiGuardian') === 'true');
-  const [browser, setBrowser] = useState(() => localStorage.getItem('tinf0ilBrowser') || 'duckduckgo');
+  const [antiGuardian, setAntiGuardian] = useState(() => localStorage.getItem('1MMUN3AntiGuardian') === 'true');
+  const [browser, setBrowser] = useState(() => localStorage.getItem('1MMUN3Browser') || 'duckduckgo');
 
   // Anti-guardian effect
   useEffect(() => {
@@ -972,14 +972,14 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
     };
   }, [antiGuardian]);
 
-  const [panicKey, setPanicKey] = useState(() => localStorage.getItem('tinf0ilPanicKey') || 'Escape');
-  const [panicUrl, setPanicUrl] = useState(() => localStorage.getItem('tinf0ilPanicUrl') || '');
+  const [panicKey, setPanicKey] = useState(() => localStorage.getItem('1MMUN3PanicKey') || 'Escape');
+  const [panicUrl, setPanicUrl] = useState(() => localStorage.getItem('1MMUN3PanicUrl') || '');
   const [listeningForKey, setListeningForKey] = useState(false);
 
   const savePanic = (key, url) => {
-    localStorage.setItem('tinf0ilPanicKey', key);
-    if (url.trim()) localStorage.setItem('tinf0ilPanicUrl', url.trim());
-    else localStorage.removeItem('tinf0ilPanicUrl');
+    localStorage.setItem('1MMUN3PanicKey', key);
+    if (url.trim()) localStorage.setItem('1MMUN3PanicUrl', url.trim());
+    else localStorage.removeItem('1MMUN3PanicUrl');
   };
 
   const themes = [
@@ -993,7 +993,7 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
   const toggles = [
     { key: 'autoBlank', val: autoBlank, set: setAutoBlank, label: 'auto about:blank', sub: 'open everything in a cloak window by default.' },
     { key: 'stealth',   val: stealth,   set: setStealth,   label: 'stealth route',    sub: 'strip referrers and telemetry on every jump.' },
-    { key: 'antiGuardian', val: antiGuardian, set: (v) => { setAntiGuardian(v); localStorage.setItem('tinf0ilAntiGuardian', v); }, label: 'anti-guardian', sub: 'prevent your teacher from closing this tab.' },
+    { key: 'antiGuardian', val: antiGuardian, set: (v) => { setAntiGuardian(v); localStorage.setItem('1MMUN3AntiGuardian', v); }, label: 'anti-guardian', sub: 'prevent your teacher from closing this tab.' },
     { key: 'reduce',    val: reduce,    set: setReduce,    label: 'reduce motion',     sub: 'turn off background animations.' },
     { key: 'bigText',   val: bigText,   set: setBigText,   label: 'larger text',      sub: 'bumps up font sizes a notch.' },
   ];
@@ -1077,20 +1077,20 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
 
             <div style={{ marginTop: 20, display: 'flex', gap: 8 }}>
               <button className="btn accent" onClick={() => {
-                window.Tinf0ilSettings?.save({
+                window.OneMMUN3Settings?.save({
                   title: cloakTitle,
                   icon: cloakIcon,
                   theme,
                   cloakPreset: cloakPresetId,
                   cloakHost: cloakAddressHost,
                 });
-                document.title = cloakTitle || 'tinf0il';
+                document.title = cloakTitle || '1MMUN3';
                 const fav = document.querySelector("link[rel='icon']");
                 if (fav && cloakIcon) fav.href = cloakIcon;
                 onCloakSave?.({ title: cloakTitle, icon: cloakIcon, presetId: cloakPresetId, host: cloakAddressHost });
               }}>save</button>
               <button className="btn" onClick={() => {
-                window.Tinf0ilSettings?.clear();
+                window.OneMMUN3Settings?.clear();
                 const classroom = CLOAK_PRESETS.find(p => p.id === 'classroom');
                 setCloakPresetId('classroom');
                 setCloakTitle(classroom.title);
@@ -1098,7 +1098,7 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
                 setCloakAddressHost(classroom.host);
                 setImportUrl('');
                 setImportErr('');
-                document.title = 'tinf0il · home';
+                document.title = '1MMUN3 · home';
                 const fav = document.querySelector("link[rel='icon']");
                 if (fav) fav.href = '/assets/foil.png';
               }}>reset</button>
@@ -1147,7 +1147,7 @@ const Settings = ({ theme, setTheme, cursorStyle, setCursorStyle, reduce, setRed
                   key={b.id}
                   type="button"
                   className={cx('browser-pick', browser === b.id && 'on')}
-                  onClick={() => { setBrowser(b.id); localStorage.setItem('tinf0ilBrowser', b.id); }}
+                  onClick={() => { setBrowser(b.id); localStorage.setItem('1MMUN3Browser', b.id); }}
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
@@ -1258,7 +1258,7 @@ const About = () => (
         <span className="panel-tag">// the deal</span>
         <h3>why this exists</h3>
         <p className="h-sub" style={{ fontSize: 14, lineHeight: 1.7 }}>
-          ads everywhere, paywalls everywhere, your school blocking half the web. tinf0il is a clean room. route what you need, skip the noise, don't get tracked doing it. that's the whole pitch.
+          ads everywhere, paywalls everywhere, your school blocking half the web. 1MMUN3 is a clean room. route what you need, skip the noise, don't get tracked doing it. that's the whole pitch.
         </p>
         <div className="tile-row">
           <div className="tile"><div className="num">{window.GAMES?.length ?? "—"}</div><div className="lab">games</div></div>
@@ -1287,18 +1287,285 @@ const About = () => (
   </main>
 );
 
-const WIDGETBOT_SERVER = '1065018473459228783';
-const WIDGETBOT_CHANNEL = '1095365023414616255';
-
 const Chatroom = () => {
+  const [messages, setMessages] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('1MMUN3ChatMessages') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const [input, setInput] = useState('');
+  const [username, setUsername] = useState(() => localStorage.getItem('1MMUN3ChatUsername') || '');
+  const [isEditingName, setIsEditingName] = useState(!username);
+  const [showNameInput, setShowNameInput] = useState(false);
+  const messagesEndRef = useRef(null);
+  const nameInputRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  useEffect(() => {
+    if (showNameInput && nameInputRef.current) {
+      nameInputRef.current.focus();
+    }
+  }, [showNameInput]);
+
+  const saveMessages = (newMessages) => {
+    localStorage.setItem('1MMUN3ChatMessages', JSON.stringify(newMessages));
+    setMessages(newMessages);
+  };
+
+  const sendMessage = (e) => {
+    e.preventDefault();
+    if (!input.trim() || !username.trim()) return;
+
+    const newMessage = {
+      id: Date.now(),
+      username: username.trim(),
+      text: input.trim(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    saveMessages([...messages, newMessage]);
+    setInput('');
+  };
+
+  const handleNameSave = (name) => {
+    if (name.trim()) {
+      localStorage.setItem('1MMUN3ChatUsername', name.trim());
+      setUsername(name.trim());
+      setShowNameInput(false);
+    }
+  };
+
+  const clearChat = () => {
+    if (confirm('Clear all messages? This action cannot be undone.')) {
+      saveMessages([]);
+    }
+  };
+
   return (
-    <div style={{ position: 'fixed', top: 53, left: 0, right: 0, bottom: 0 }}>
-      <iframe
-        src={`https://e.widgetbot.io/channels/${WIDGETBOT_SERVER}/${WIDGETBOT_CHANNEL}`}
-        title="tinf0il chatroom"
-        allow="clipboard-write; fullscreen"
-        style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-      />
+    <div style={{ position: 'fixed', top: 53, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', background: 'var(--bg)', color: 'var(--text)', fontFamily: 'Inter, sans-serif' }}>
+      {/* Header */}
+      <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)' }}>1MMUN3 Chatroom</div>
+            <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>{messages.length} {messages.length === 1 ? 'message' : 'messages'}</div>
+          </div>
+        </div>
+        <button
+          onClick={clearChat}
+          style={{
+            background: 'transparent',
+            border: '1px solid var(--line)',
+            color: 'var(--muted)',
+            padding: '6px 12px',
+            cursor: 'pointer',
+            borderRadius: '6px',
+            fontSize: '12px',
+            fontWeight: '500',
+            transition: 'all 150ms ease',
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = 'var(--accent-dim)';
+            e.target.style.color = 'var(--accent)';
+            e.target.style.borderColor = 'rgba(255,255,255,0.2)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = 'transparent';
+            e.target.style.color = 'var(--muted)';
+            e.target.style.borderColor = 'var(--line)';
+          }}
+        >
+          Clear Chat
+        </button>
+      </div>
+
+      {/* Messages Area */}
+      <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '12px', scrollBehavior: 'smooth' }}>
+        {messages.length === 0 && (
+          <div style={{ textAlign: 'center', color: 'var(--muted)', marginTop: 'auto', marginBottom: 'auto' }}>
+            <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '8px' }}>No messages yet</div>
+            <div style={{ fontSize: '13px' }}>Be the first to start the conversation!</div>
+          </div>
+        )}
+        {messages.map((msg) => (
+          <div key={msg.id} style={{ display: 'flex', gap: '12px', fontSize: '14px', animation: 'fadeIn 0.2s ease' }}>
+            <div>
+              <div style={{ color: 'var(--accent)', fontWeight: '600', fontSize: '13px', marginBottom: '2px' }}>
+                {msg.username}
+              </div>
+              <div style={{ color: 'var(--muted)', fontSize: '11px' }}>
+                {msg.time}
+              </div>
+            </div>
+            <div style={{ flex: 1, paddingTop: '2px' }}>
+              <div style={{ color: 'var(--text)', wordBreak: 'break-word', lineHeight: '1.4', fontSize: '14px' }}>
+                {msg.text}
+              </div>
+            </div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input Area */}
+      <div style={{ padding: '16px 24px', borderTop: '1px solid var(--line)', background: 'var(--bg2)' }}>
+        {/* Username Section */}
+        <div style={{ marginBottom: '12px' }}>
+          {showNameInput ? (
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                ref={nameInputRef}
+                type="text"
+                placeholder="Enter your username..."
+                defaultValue={username}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') handleNameSave(e.target.value);
+                }}
+                onBlur={(e) => handleNameSave(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  background: 'var(--bg)',
+                  border: '1px solid var(--line)',
+                  color: 'var(--text)',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontFamily: 'Inter, sans-serif',
+                  outline: 'none',
+                  transition: 'border-color 150ms ease',
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = 'var(--accent-dim)';
+                }}
+              />
+              <button
+                onClick={() => handleNameSave(nameInputRef.current?.value || '')}
+                style={{
+                  padding: '8px 16px',
+                  background: 'var(--accent-dim)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: 'var(--accent)',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 150ms ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'var(--accent)';
+                  e.target.style.color = '#000';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'var(--accent-dim)';
+                  e.target.style.color = 'var(--accent)';
+                }}
+              >
+                Save
+              </button>
+            </div>
+          ) : (
+            <div
+              onClick={() => setShowNameInput(true)}
+              style={{
+                fontSize: '12px',
+                color: 'var(--muted)',
+                padding: '8px 12px',
+                background: 'var(--bg)',
+                border: '1px solid var(--line)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'all 150ms ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--accent-dim)';
+                e.currentTarget.style.color = 'var(--accent)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--line)';
+                e.currentTarget.style.color = 'var(--muted)';
+              }}
+            >
+              {username ? <span>Chatting as <strong style={{ color: 'var(--accent)' }}>{username}</strong> • Click to change</span> : 'Set a username to chat'}
+            </div>
+          )}
+        </div>
+
+        {/* Message Input */}
+        <form onSubmit={sendMessage} style={{ display: 'flex', gap: '8px' }}>
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={username ? 'Say something...' : 'Set a username first...'}
+            disabled={!username}
+            style={{
+              flex: 1,
+              padding: '10px 12px',
+              background: 'var(--bg)',
+              border: '1px solid var(--line)',
+              color: 'var(--text)',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontFamily: 'Inter, sans-serif',
+              outline: 'none',
+              transition: 'border-color 150ms ease',
+              opacity: username ? 1 : 0.5,
+            }}
+            onFocus={(e) => {
+              if (username) e.target.style.borderColor = 'var(--accent-dim)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = 'var(--line)';
+            }}
+          />
+          <button
+            type="submit"
+            disabled={!input.trim() || !username}
+            style={{
+              padding: '10px 20px',
+              background: input.trim() && username ? 'var(--accent-dim)' : 'transparent',
+              border: '1px solid var(--line)',
+              color: input.trim() && username ? 'var(--accent)' : 'var(--muted)',
+              borderRadius: '6px',
+              cursor: input.trim() && username ? 'pointer' : 'not-allowed',
+              fontSize: '13px',
+              fontWeight: '600',
+              transition: 'all 150ms ease',
+              fontFamily: 'Inter, sans-serif',
+            }}
+            onMouseEnter={(e) => {
+              if (input.trim() && username) {
+                e.target.style.background = 'var(--accent)';
+                e.target.style.color = 'var(--bg)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (input.trim() && username) {
+                e.target.style.background = 'var(--accent-dim)';
+                e.target.style.color = 'var(--accent)';
+              }
+            }}
+          >
+            Send
+          </button>
+        </form>
+      </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 };
@@ -1389,38 +1656,38 @@ const App = () => {
   const [activeItem, setActiveItem] = useState(null);
 
   // ── cursor ──
-  const [cursorStyle, setCursorStyleState] = useState(() => localStorage.getItem('tinf0ilCursor') || 'dot');
-  const setCursorStyle = (v) => { setCursorStyleState(v); localStorage.setItem('tinf0ilCursor', v); };
+  const [cursorStyle, setCursorStyleState] = useState(() => localStorage.getItem('1MMUN3Cursor') || 'dot');
+  const setCursorStyle = (v) => { setCursorStyleState(v); localStorage.setItem('1MMUN3Cursor', v); };
 
   // ── reduce motion ──
   const [reduce, setReduceState] = useState(() => {
-    const v = localStorage.getItem('tinf0ilReduce') === 'true';
+    const v = localStorage.getItem('1MMUN3Reduce') === 'true';
     if (v) document.documentElement.setAttribute('data-reduce-motion', '');
     return v;
   });
   const setReduce = (v) => {
     setReduceState(v);
-    localStorage.setItem('tinf0ilReduce', v);
+    localStorage.setItem('1MMUN3Reduce', v);
     if (v) document.documentElement.setAttribute('data-reduce-motion', '');
     else document.documentElement.removeAttribute('data-reduce-motion');
   };
 
   // ── big text ──
   const [bigText, setBigTextState] = useState(() => {
-    const v = localStorage.getItem('tinf0ilBigText') === 'true';
+    const v = localStorage.getItem('1MMUN3BigText') === 'true';
     if (v) document.documentElement.setAttribute('data-big-text', '');
     return v;
   });
   const setBigText = (v) => {
     setBigTextState(v);
-    localStorage.setItem('tinf0ilBigText', v);
+    localStorage.setItem('1MMUN3BigText', v);
     if (v) document.documentElement.setAttribute('data-big-text', '');
     else document.documentElement.removeAttribute('data-big-text');
   };
 
   // ── anti-guardian (app-level) ──
   useEffect(() => {
-    const antiGuardian = localStorage.getItem('tinf0ilAntiGuardian') === 'true';
+    const antiGuardian = localStorage.getItem('1MMUN3AntiGuardian') === 'true';
     if (!antiGuardian) return;
 
     const handleBeforeUnload = (e) => {
@@ -1457,12 +1724,12 @@ const App = () => {
 
   // ── favorites ──
   const [favorites, setFavoritesState] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('tinf0ilFavorites') || '{"games":[],"apps":[]}'); }
+    try { return JSON.parse(localStorage.getItem('1MMUN3Favorites') || '{"games":[],"apps":[]}'); }
     catch { return { games: [], apps: [] }; }
   });
 
   const saveFavs = (updated, uid) => {
-    localStorage.setItem('tinf0ilFavorites', JSON.stringify(updated));
+    localStorage.setItem('1MMUN3Favorites', JSON.stringify(updated));
     if (uid) window.fbDb?.collection('proxy-users').doc(uid).set({ favorites: updated }, { merge: true }).catch(() => {});
   };
 
@@ -1479,8 +1746,8 @@ const App = () => {
   // ── cloud sync helpers ──
   const cloudSettings = () => ({
     theme, cursorStyle, reduce, bigText,
-    panicKey: localStorage.getItem('tinf0ilPanicKey') || 'Escape',
-    panicUrl: localStorage.getItem('tinf0ilPanicUrl') || '',
+    panicKey: localStorage.getItem('1MMUN3PanicKey') || 'Escape',
+    panicUrl: localStorage.getItem('1MMUN3PanicUrl') || '',
   });
 
   const pushSettings = (extra = {}) => {
@@ -1502,8 +1769,8 @@ const App = () => {
     if (s.cursorStyle) setCursorStyleState(s.cursorStyle);
     if (s.reduce  != null) setReduce(s.reduce);
     if (s.bigText != null) setBigText(s.bigText);
-    if (s.panicKey) localStorage.setItem('tinf0ilPanicKey', s.panicKey);
-    if (s.panicUrl != null) localStorage.setItem('tinf0ilPanicUrl', s.panicUrl);
+    if (s.panicKey) localStorage.setItem('1MMUN3PanicKey', s.panicKey);
+    if (s.panicUrl != null) localStorage.setItem('1MMUN3PanicUrl', s.panicUrl);
     if (s.cloak) {
       if (s.cloak.title) localStorage.setItem('websiteTitle', s.cloak.title);
       if (s.cloak.icon)  localStorage.setItem('websiteIcon',  s.cloak.icon);
@@ -1525,7 +1792,7 @@ const App = () => {
             applyCloudSettings(data.settings);
             if (data.favorites) {
               setFavoritesState(data.favorites);
-              localStorage.setItem('tinf0ilFavorites', JSON.stringify(data.favorites));
+              localStorage.setItem('1MMUN3Favorites', JSON.stringify(data.favorites));
             }
             setSyncStatus('saved');
           } else {
@@ -1569,8 +1836,8 @@ const App = () => {
   useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
   useEffect(() => {
     if (localStorage.getItem('websiteTitle')) return;
-    const titles = { home: 'tinf0il · home', games: 'tinf0il · games', apps: 'tinf0il · apps', tv: 'tinf0il TV', chatroom: 'tinf0il · chatroom', settings: 'tinf0il · settings', about: 'tinf0il · about' };
-    document.title = titles[page] || 'tinf0il';
+    const titles = { home: '1MMUN3 · home', games: '1MMUN3 · games', apps: '1MMUN3 · apps', tv: '1MMUN3 TV', chatroom: '1MMUN3 · chatroom', settings: '1MMUN3 · settings', about: '1MMUN3 · about' };
+    document.title = titles[page] || '1MMUN3';
   }, [page]);
 
   const voice = VOICE_PRESETS[tweaks.voice] || VOICE_PRESETS.punchy;
@@ -1585,7 +1852,7 @@ const App = () => {
       {page === 'home'     && <Home navigate={navigate} voice={voice} />}
       {page === 'games'    && <Catalog kind="games" items={window.GAMES} tags={window.GAME_TAGS} setActiveItem={setActiveItem} favorites={favorites} toggleFav={toggleFav} />}
       {page === 'apps'     && <Catalog kind="apps"  items={window.APPS}  tags={window.APP_TAGS}  setActiveItem={setActiveItem} favorites={favorites} toggleFav={toggleFav} />}
-      {page === 'tv'       && <Tinf0ilTV theme={theme} />}
+      {page === 'tv'       && <OneMMUN3TV theme={theme} />}
       {page === 'chatroom' && <Chatroom />}
       {page === 'settings' && <Settings theme={theme} setTheme={t => { setTheme(t); setTweak('theme', t); }} cursorStyle={cursorStyle} setCursorStyle={setCursorStyle} reduce={reduce} setReduce={setReduce} bigText={bigText} setBigText={setBigText} user={user} onSignOut={handleSignOut} onShowAuth={() => setShowAuth(true)} onCloakSave={c => pushSettings({ cloak: c })} syncStatus={syncStatus} />}
       {page === 'about'    && <About />}
