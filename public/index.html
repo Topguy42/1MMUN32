@@ -77,13 +77,13 @@
                 const q = pts[j];
                 const d = Math.hypot(p.x - q.x, p.y - q.y);
                 if (d < 105) {
-                  ctx.strokeStyle = `rgba(255,255,255,${0.045 * (1 - d / 105)})`;
+                  ctx.strokeStyle = `rgba(255,255,255,${0.02 * (1 - d / 105)})`;
                   ctx.lineWidth = 0.5;
                   ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
                 }
               }
               ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-              ctx.fillStyle = `rgba(255,255,255,${p.a})`; ctx.fill();
+              ctx.fillStyle = `rgba(255,255,255,${p.a * 0.5})`; ctx.fill();
             }
           }
           requestAnimationFrame(frame);

@@ -296,6 +296,7 @@ main {
 .brand em {
   font-style: normal;
   color: var(--accent);
+  text-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.5);
 }
 
 .brand-logo {
@@ -387,6 +388,7 @@ main {
 .hero h1 em {
   font-style: normal;
   color: var(--accent);
+  text-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.5);
 }
 
 .hero-sub {
@@ -573,7 +575,7 @@ main {
   margin-bottom: 8px;
 }
 
-.page-hero h1 em { font-style: normal; color: var(--accent); }
+.page-hero h1 em { font-style: normal; color: var(--accent); text-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.5); }
 
 .page-hero .lede {
   color: var(--muted);
@@ -997,6 +999,7 @@ html.cursor-in-iframe * { cursor: auto !important; }
 .tv-loading-label em {
   color: var(--accent);
   font-style: normal;
+  text-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.5);
 }
 
 .tv-loading-bar {
@@ -1347,8 +1350,8 @@ html.cursor-in-iframe * { cursor: auto !important; }
   user-select: none;
   z-index: 15;
   will-change: transform;
-  filter: drop-shadow(0 0 12px rgba(126, 184, 164, 0.5))
-          drop-shadow(0 0 28px rgba(126, 184, 164, 0.2));
+  filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.5))
+          drop-shadow(0 0 28px rgba(255, 255, 255, 0.2));
 }
 
 /* ── animation keyframes ── */
