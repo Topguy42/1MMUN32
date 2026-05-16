@@ -763,7 +763,11 @@ const OneMMUN3TV = ({ theme }) => {
   // start the iframe there instead of always at /tv/
   const [iframeSrc] = useState(() => {
     const p = location.pathname;
-    return p.startsWith('/tv/') ? (p + location.search) : '/tv/';
+    const baseUrl = (typeof window !== 'undefined' && window.TV_APP_URL) || 'http://localhost:3000';
+    if (p.startsWith('/tv/')) {
+      return baseUrl + (p.slice(3) + location.search);
+    }
+    return baseUrl;
   });
 
   const syncOuterUrl = () => {
@@ -1288,9 +1292,10 @@ const About = () => (
 );
 
 const Chatroom = () => {
+  const storageKey = 'GLOBAL_1MMUN3ChatMessages';
   const [messages, setMessages] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('1MMUN3ChatMessages') || '[]');
+      return JSON.parse(localStorage.getItem(storageKey) || '[]');
     } catch {
       return [];
     }
@@ -1316,8 +1321,32 @@ const Chatroom = () => {
     }
   }, [showNameInput]);
 
+  // Poll for global message updates every 500ms
+  useEffect(() => {
+    const pollInterval = setInterval(() => {
+      try {
+        const stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        setMessages(stored);
+      } catch {}
+    }, 500);
+    return () => clearInterval(pollInterval);
+  }, []);
+
+  // Listen for storage changes from other tabs
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === storageKey) {
+        try {
+          setMessages(JSON.parse(e.newValue || '[]'));
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   const saveMessages = (newMessages) => {
-    localStorage.setItem('1MMUN3ChatMessages', JSON.stringify(newMessages));
+    localStorage.setItem(storageKey, JSON.stringify(newMessages));
     setMessages(newMessages);
   };
 
@@ -1846,7 +1875,7 @@ const App = () => {
 
   return (
     <>
-      <CustomCursor cursorStyle={(page === 'tv' || page === 'chatroom') ? 'off' : cursorStyle} />
+      <CustomCursor cursorStyle={cursorStyle} />
       <TopBar page={page} navigate={navigate} user={user} onAccountClick={handleAccountClick} />
 
       {page === 'home'     && <Home navigate={navigate} voice={voice} />}
