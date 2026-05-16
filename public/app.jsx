@@ -1292,18 +1292,12 @@ const About = () => (
 );
 
 const Chatroom = () => {
-  const storageKey = 'GLOBAL_1MMUN3ChatMessages';
-  const [messages, setMessages] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem(storageKey) || '[]');
-    } catch {
-      return [];
-    }
-  });
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [username, setUsername] = useState(() => localStorage.getItem('1MMUN3ChatUsername') || '');
-  const [isEditingName, setIsEditingName] = useState(!username);
   const [showNameInput, setShowNameInput] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
   const nameInputRef = useRef(null);
 
@@ -1321,48 +1315,56 @@ const Chatroom = () => {
     }
   }, [showNameInput]);
 
-  // Poll for global message updates every 500ms
+  // Load messages from Firebase
   useEffect(() => {
-    const pollInterval = setInterval(() => {
+    const loadMessages = async () => {
       try {
-        const stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        setMessages(stored);
-      } catch {}
-    }, 500);
-    return () => clearInterval(pollInterval);
-  }, []);
-
-  // Listen for storage changes from other tabs
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === storageKey) {
-        try {
-          setMessages(JSON.parse(e.newValue || '[]'));
-        } catch {}
+        const response = await fetch('https://1mmun3-b75b1-default-rtdb.firebaseio.com/chatMessages.json');
+        if (response.ok) {
+          const data = await response.json();
+          const msgArray = data ? Object.values(data).sort((a, b) => a.timestamp - b.timestamp) : [];
+          setMessages(msgArray);
+        }
+      } catch (err) {
+        console.error('Failed to load messages:', err);
+      } finally {
+        setLoading(false);
       }
     };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+
+    loadMessages();
+    const interval = setInterval(loadMessages, 1000);
+    return () => clearInterval(interval);
   }, []);
 
-  const saveMessages = (newMessages) => {
-    localStorage.setItem(storageKey, JSON.stringify(newMessages));
-    setMessages(newMessages);
-  };
-
-  const sendMessage = (e) => {
+  const sendMessage = async (e) => {
     e.preventDefault();
-    if (!input.trim() || !username.trim()) return;
+    if (!input.trim() || !username.trim() || sending) return;
 
-    const newMessage = {
-      id: Date.now(),
-      username: username.trim(),
-      text: input.trim(),
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
+    setSending(true);
+    try {
+      const newMessage = {
+        id: Date.now().toString(),
+        username: username.trim(),
+        text: input.trim(),
+        timestamp: Date.now(),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
 
-    saveMessages([...messages, newMessage]);
-    setInput('');
+      const response = await fetch('https://1mmun3-b75b1-default-rtdb.firebaseio.com/chatMessages.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newMessage),
+      });
+
+      if (response.ok) {
+        setInput('');
+      }
+    } catch (err) {
+      console.error('Failed to send message:', err);
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleNameSave = (name) => {
@@ -1375,7 +1377,9 @@ const Chatroom = () => {
 
   const clearChat = () => {
     if (confirm('Clear all messages? This action cannot be undone.')) {
-      saveMessages([]);
+      fetch('https://1mmun3-b75b1-default-rtdb.firebaseio.com/chatMessages.json', { method: 'DELETE' })
+        .then(() => setMessages([]))
+        .catch(err => console.error('Failed to clear chat:', err));
     }
   };
 
@@ -1419,7 +1423,12 @@ const Chatroom = () => {
 
       {/* Messages Area */}
       <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '12px', scrollBehavior: 'smooth' }}>
-        {messages.length === 0 && (
+        {loading && (
+          <div style={{ textAlign: 'center', color: 'var(--muted)', marginTop: 'auto', marginBottom: 'auto' }}>
+            <div style={{ fontSize: '14px' }}>Loading messages...</div>
+          </div>
+        )}
+        {!loading && messages.length === 0 && (
           <div style={{ textAlign: 'center', color: 'var(--muted)', marginTop: 'auto', marginBottom: 'auto' }}>
             <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '8px' }}>No messages yet</div>
             <div style={{ fontSize: '13px' }}>Be the first to start the conversation!</div>
@@ -1558,33 +1567,34 @@ const Chatroom = () => {
           />
           <button
             type="submit"
-            disabled={!input.trim() || !username}
+            disabled={!input.trim() || !username || sending}
             style={{
               padding: '10px 20px',
-              background: input.trim() && username ? 'var(--accent-dim)' : 'transparent',
+              background: input.trim() && username && !sending ? 'var(--accent-dim)' : 'transparent',
               border: '1px solid var(--line)',
-              color: input.trim() && username ? 'var(--accent)' : 'var(--muted)',
+              color: input.trim() && username && !sending ? 'var(--accent)' : 'var(--muted)',
               borderRadius: '6px',
-              cursor: input.trim() && username ? 'pointer' : 'not-allowed',
+              cursor: input.trim() && username && !sending ? 'pointer' : 'not-allowed',
               fontSize: '13px',
               fontWeight: '600',
               transition: 'all 150ms ease',
               fontFamily: 'Inter, sans-serif',
+              opacity: sending ? 0.6 : 1,
             }}
             onMouseEnter={(e) => {
-              if (input.trim() && username) {
+              if (input.trim() && username && !sending) {
                 e.target.style.background = 'var(--accent)';
                 e.target.style.color = 'var(--bg)';
               }
             }}
             onMouseLeave={(e) => {
-              if (input.trim() && username) {
+              if (input.trim() && username && !sending) {
                 e.target.style.background = 'var(--accent-dim)';
                 e.target.style.color = 'var(--accent)';
               }
             }}
           >
-            Send
+            {sending ? 'Sending...' : 'Send'}
           </button>
         </form>
       </div>
